@@ -1,9 +1,9 @@
 ﻿using IPALogger = IPA.Logging.Logger;
 
-namespace LocalRank
+namespace SongPlayHistory
 {
     internal static class Logger
     {
-        public static IPALogger log { get; set; }
+        public static IPALogger Log { get; set; }
     }
 }
