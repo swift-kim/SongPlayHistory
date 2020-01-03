@@ -1,9 +1,9 @@
 ﻿using BS_Utils.Utilities;
+using HMUI;
 using System;
 using System.Linq;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using Image = UnityEngine.UI.Image;
 
 namespace SongPlayHistory
 {
@@ -42,7 +42,7 @@ namespace SongPlayHistory
         {
             try
             {
-                CreateUI();
+                InitializeUI();
             }
             catch (Exception ex)
             {
@@ -90,9 +90,9 @@ namespace SongPlayHistory
         /// <summary>
         /// </summary>
         /// <exception cref="InvalidOperationException">Fail fast if something goes wrong.</exception>
-        private void CreateUI()
+        private void InitializeUI()
         {
-            // Find our target container.
+            // Search the target container.
             var flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             var levelSelectionNavController = flowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
             var levelDetailViewController = levelSelectionNavController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
@@ -104,31 +104,23 @@ namespace SongPlayHistory
             //   -- MaxCombo, Highscore, MaxRank [RectTransform]
             //   ---- Title, Value [RectTransform, TextMeshProUGUI, (LocalizedTextMeshProUGUI)]
             var statsRect = playerStatsContainer.GetComponentInChildren<RectTransform>();
-            var maxComboRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
-            var highscoreRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
-            var maxRankRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
+            var maxComboRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().FirstOrDefault(x => x.name == "MaxCombo");
+            var highscoreRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().FirstOrDefault(x => x.name == "Highscore");
+            var maxRankRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().FirstOrDefault(x => x.name == "MaxRank");
 
-            // Apply new sizes and positions.
-            // Initial width = 72 (total), 24 (each)
-            // Resized width = 54 (total), 18 (each)
-            maxComboRect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 18.0f);
-            highscoreRect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 18.0f, 18.0f);
-            maxRankRect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 36.0f, 18.0f);
+            // Create our rect.
+            var playCountRect = Instantiate(maxComboRect, statsRect);
+            var playCountTitleTMP = playCountRect.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
+            var playCountValueTMP = playCountRect.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
+            playCountRect.name = "PlayCount";
+            playCountTitleTMP.SetText("Play Count");
+            playCountValueTMP.SetText("0");
 
-            // Create our button.
-            var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            var button = Instantiate(playButton, statsRect);
-            var buttonTextRect = button.GetComponentsInChildren<RectTransform>().First(x => x.name == "Text");
-            if (buttonTextRect != null)
-                Destroy(buttonTextRect.gameObject);
-            button.name = name;
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() =>
-            {
-                // TODO
-            });
-            var buttonImage = button.GetComponentsInChildren<Image>().First(x => x.name == "Icon");
-            //buttonImage.sprite = null; // TODO
+            // Resize and translate components.
+            maxComboRect?.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, -2.0f, 16.0f);
+            highscoreRect?.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 15f, 16.0f);
+            maxRankRect?.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 23f, 16.0f);
+            playCountRect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 6.0f, 16.0f);
         }
     }
 }
