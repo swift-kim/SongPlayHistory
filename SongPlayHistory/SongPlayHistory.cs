@@ -5,6 +5,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static StandardLevelDetailViewController;
 
 namespace SongPlayHistory
 {
@@ -12,8 +13,8 @@ namespace SongPlayHistory
     {
         public static SongPlayHistory Instance;
 
-        private TextMeshProUGUI _playCount;
-        private HoverHint _playHistory;
+        private TextMeshProUGUI playCountValue;
+        private HoverHint statsHoverHint; // The hint text should be in less than 10 lines.
 
         internal static void OnLoad()
         {
@@ -42,11 +43,12 @@ namespace SongPlayHistory
         {
             try
             {
-                InitializeUI();
+                Initialize();
+                Logger.Log?.Debug($"Finished initializing {name}.");
             }
             catch (Exception ex)
             {
-                Logger.Log?.Debug($"Unable to initialize UI: {ex.Message}");
+                Logger.Log?.Debug($"Unable to initialize {name}: {ex.Message}");
                 Logger.Log?.Debug(ex);
             }
         }
@@ -89,61 +91,80 @@ namespace SongPlayHistory
 
         /// <summary>
         /// </summary>
-        /// <exception cref="InvalidOperationException">Fail fast if something goes wrong.</exception>
-        private void InitializeUI()
+        /// <exception cref="InvalidOperationException">Fail fast if anything goes wrong.</exception>
+        private void Initialize()
         {
-            // Find some existing components.
+            // Note: I'm new to Unity so please correct my code if anything looks weird.
+            // Reveal some existing components.
             var flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             var levelSelectionNavController = flowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
+            var levelCollectionViewController = levelSelectionNavController.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
             var levelDetailViewController = levelSelectionNavController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
             var standardLevelDetailView = levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
-            var playerStatsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
-            // Components hierarchy:
-            //   Stats [RectTransform, LayoutElement]
-            //   -- MaxCombo, Highscore, MaxRank [RectTransform]
-            //   ---- Title, Value [RectTransform, TextMeshProUGUI, (LocalizedTextMeshProUGUI)]
-            var statsRect = playerStatsContainer.GetComponentInChildren<RectTransform>();
-            var maxComboRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
-            var highscoreRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
-            var maxRankRect = playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
+            var statsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
 
-            // Create our rect.
-            var playCountRect = Instantiate(maxComboRect, statsRect);
-            playCountRect.name = "PlayCount";
-            var playCountTitleTMP = playCountRect.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
-            playCountTitleTMP.SetText("Play Count");
-            _playCount = playCountRect.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
-            _playCount.SetText("-");
+            // What are inside statsContainer:
+            // - Stats [RectTransform/LayoutElement]
+            //   - MaxCombo, Highscore, MaxRank [RectTransform]
+            //     - Title, Value [RectTransform/(Localized)TextMeshProUGUI]
+            var maxCombo = statsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
+            var highscore = statsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
+            var maxRank = statsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
 
-            // Resize and translate rects.
-            maxComboRect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, -2.0f, 16.0f);
-            highscoreRect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 15.0f, 16.0f);
-            maxRankRect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 23.0f, 16.0f);
-            playCountRect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 6.0f, 16.0f);
+            // Add our component.
+            var playCount = Instantiate(maxCombo, statsContainer.transform);
+            playCount.name = "PlayCount";
+            var playCountTitle = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
+            playCountValue = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
+            playCountTitle.SetText("Play Count");
+            playCountValue.SetText("-");
 
-            // Add a hover hint.
-            // FIXIT: Temporarily making use of invisible button to show a HoverHint.
+            // Resize and align components.
+            // The full width of statsRect is 72, but we need some padding at the left/right ends.
+            maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, -2.0f, 16.0f);
+            highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 15.0f, 16.0f);
+            maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 32.0f, 16.0f);
+            playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 6.0f, 16.0f);
+
+            // Install handlers.
+            levelCollectionViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
+            levelDetailViewController.didPresentContentEvent += OnDidPresentContentEvent;
+            levelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmapEvent;
+
+            // Create a HoverHint.
+            // TODO: Avoid the use of invisible button.
             var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            var button = Instantiate(playButton, statsRect);
-            var buttonRect = button.transform as RectTransform;
-            var wrapperRect = buttonRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "Wrapper");
-            wrapperRect.anchoredPosition = new Vector2(18.5f, -4.4f);
-            wrapperRect.sizeDelta = statsRect.sizeDelta;
-            var glowContainerRect = buttonRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "GlowContainer");
-            var strokeRect = buttonRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "Stroke");
-            var textRect = buttonRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "Text");
-            Destroy(glowContainerRect.gameObject);
-            Destroy(strokeRect.gameObject);
-            Destroy(textRect.gameObject);
+            var hiddenButton = Instantiate(playButton, statsContainer.transform);
+            var hiddenButtonWrapper = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Wrapper");
+            var hiddenButtonStroke = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Stroke");
+            var hiddenButtonGlow = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "GlowContainer");
+            var hiddenButtonText = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Text");
+            hiddenButtonWrapper.anchoredPosition = new Vector2(18.5f, -4.4f);
+            hiddenButtonWrapper.sizeDelta = (statsContainer.transform as RectTransform).sizeDelta;
+            Destroy(hiddenButtonStroke.gameObject);
+            Destroy(hiddenButtonGlow.gameObject);
+            Destroy(hiddenButtonText.gameObject);
             var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-            var targetElement = button.GetComponentsInChildren<StackLayoutGroup>().First();
-            var existingHint = targetElement.GetComponentsInChildren<HoverHint>().FirstOrDefault();
-            if (existingHint != null)
-                DestroyImmediate(existingHint);
-            _playHistory = targetElement.gameObject.AddComponent<HoverHint>();
-            _playHistory.SetPrivateField("_hoverHintController", hoverHintController);
-            _playHistory.name = name;
-            _playHistory.text = null; // 9 lines max
+            var hoverHintHolder = hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();
+            statsHoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
+            statsHoverHint.SetPrivateField("_hoverHintController", hoverHintController);
+            statsHoverHint.name = name;
+            statsHoverHint.text = "No record";
+        }
+
+        private void OnDidSelectLevelEvent(LevelCollectionViewController controller, IPreviewBeatmapLevel level)
+        {
+            Logger.Log?.Debug($"OnDidSelectLevelEvent {level.songName}");
+        }
+
+        private void OnDidPresentContentEvent(StandardLevelDetailViewController controller, ContentType type)
+        {
+            Logger.Log?.Debug($"OnDidPresentContentEvent {type}");
+        }
+
+        private void OnDidChangeDifficultyBeatmapEvent(StandardLevelDetailViewController controller, IDifficultyBeatmap beatmap)
+        {
+            Logger.Log?.Debug($"OnDidChangeDifficultyBeatmapEvent {beatmap.level.songName} {beatmap.difficulty}");
         }
     }
 }

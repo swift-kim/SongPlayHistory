@@ -1,7 +1,7 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
   "author": "swift-kim",
-  "description": "Record and display not only your best scores but all previous scores",
+  "description": "Compare your own scores",
   "gameVersion": "1.6.0",
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
