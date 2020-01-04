@@ -5,7 +5,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static StandardLevelDetailViewController;
 
 namespace SongPlayHistory
 {
@@ -14,7 +13,7 @@ namespace SongPlayHistory
         public static SongPlayHistory Instance;
 
         private TextMeshProUGUI playCountValue;
-        private HoverHint statsHoverHint; // The hint text should be in less than 10 lines.
+        private HoverHint statsHoverHint; // The hint text should be in 9 lines or less.
 
         internal static void OnLoad()
         {
@@ -98,7 +97,6 @@ namespace SongPlayHistory
             // Reveal some existing components.
             var flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             var levelSelectionNavController = flowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
-            var levelCollectionViewController = levelSelectionNavController.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
             var levelDetailViewController = levelSelectionNavController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
             var standardLevelDetailView = levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
             var statsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
@@ -120,19 +118,19 @@ namespace SongPlayHistory
             playCountValue.SetText("-");
 
             // Resize and align components.
-            // The full width of statsRect is 72, but we need some padding at the left/right ends.
+            // The full width of statsRect is 72, but we need some padding at each end.
             maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, -2.0f, 16.0f);
             highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 15.0f, 16.0f);
             maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 32.0f, 16.0f);
             playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 6.0f, 16.0f);
 
-            // Install handlers.
-            levelCollectionViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
-            levelDetailViewController.didPresentContentEvent += OnDidPresentContentEvent;
-            levelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmapEvent;
+            // Install event handlers.
+            levelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
+            levelDetailViewController.didPresentContentEvent += OnDidPresentContent;
+            //TODO: Should be notified when returned from the game play scene.
 
             // Create a HoverHint.
-            // TODO: Avoid the use of invisible button.
+            //TODO: Avoid the use of an invisible button.
             var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
             var hiddenButton = Instantiate(playButton, statsContainer.transform);
             var hiddenButtonWrapper = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Wrapper");
@@ -152,19 +150,42 @@ namespace SongPlayHistory
             statsHoverHint.text = "No record";
         }
 
-        private void OnDidSelectLevelEvent(LevelCollectionViewController controller, IPreviewBeatmapLevel level)
+        private void OnDidChangeDifficultyBeatmap(StandardLevelDetailViewController levelDetail, IDifficultyBeatmap beatmap)
         {
-            Logger.Log?.Debug($"OnDidSelectLevelEvent {level.songName}");
+            var playerData = levelDetail.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
+            int playCount = GetPlayCountForBeatmap(playerData, beatmap);
+            playCountValue?.SetText(playCount > 0 ? playCount.ToString() : "-");
         }
 
-        private void OnDidPresentContentEvent(StandardLevelDetailViewController controller, ContentType type)
+        private void OnDidPresentContent(StandardLevelDetailViewController levelDetail, StandardLevelDetailViewController.ContentType contentType)
         {
-            Logger.Log?.Debug($"OnDidPresentContentEvent {type}");
+            var beatmap = levelDetail.selectedDifficultyBeatmap;
+            if (beatmap == null || contentType != StandardLevelDetailViewController.ContentType.OwnedAndReady)
+            {
+                playCountValue?.SetText("-");
+            }
+            else
+            {
+                var playerData = levelDetail.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
+                int playCount = GetPlayCountForBeatmap(playerData, beatmap);
+                playCountValue?.SetText(playCount > 0 ? playCount.ToString() : "-");
+            }
         }
 
-        private void OnDidChangeDifficultyBeatmapEvent(StandardLevelDetailViewController controller, IDifficultyBeatmap beatmap)
+        private int GetPlayCountForBeatmap(PlayerDataModelSO playerData, IDifficultyBeatmap beatmap)
         {
-            Logger.Log?.Debug($"OnDidChangeDifficultyBeatmapEvent {beatmap.level.songName} {beatmap.difficulty}");
+            if (playerData?.playerData == null || beatmap == null)
+                return 0;
+
+            var playerLevelStats = playerData.playerData.levelsStatsData.FirstOrDefault(
+                x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
+            if (playerLevelStats == null) // Data corrupted?
+            {
+                Logger.Log?.Warn($"Unable to load {nameof(PlayerLevelStatsData)} for {beatmap.level.levelID} - {beatmap.difficulty}.");
+                return 0;
+            }
+
+            return playerLevelStats.playCount;
         }
     }
 }
