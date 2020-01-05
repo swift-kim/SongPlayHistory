@@ -12,8 +12,10 @@ namespace SongPlayHistory
     {
         public static SongPlayHistory Instance;
 
+        private StandardLevelDetailViewController levelDetailViewController;
         private TextMeshProUGUI playCountValue;
-        private HoverHint statsHoverHint; // The hint text should be in 9 lines or less.
+        private HoverHint statsHoverHint; // Note: The hint text should be in 9 lines or less.
+        private bool isInitialized = false;
 
         internal static void OnLoad()
         {
@@ -40,16 +42,18 @@ namespace SongPlayHistory
         /// </summary>
         private void Start()
         {
-            try
+            var soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
+            soloFreePlayButton.onClick.AddListener(() =>
             {
-                Initialize();
-                Logger.Log?.Debug($"Finished initializing {name}.");
-            }
-            catch (Exception ex)
-            {
-                Logger.Log?.Debug($"Unable to initialize {name}: {ex.Message}");
-                Logger.Log?.Debug(ex);
-            }
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log?.Debug(ex);
+                }
+            });
         }
 
         /// <summary>
@@ -93,11 +97,14 @@ namespace SongPlayHistory
         /// <exception cref="InvalidOperationException">Fail fast if anything goes wrong.</exception>
         private void Initialize()
         {
-            // Note: I'm new to Unity so please correct my code if anything looks weird.
-            // Reveal some existing components.
+            if (isInitialized)
+                return;
+
+            // Find components of our interest.
             var flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
+            var resultsViewController = flowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
             var levelSelectionNavController = flowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
-            var levelDetailViewController = levelSelectionNavController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
+            levelDetailViewController = levelSelectionNavController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
             var standardLevelDetailView = levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
             var statsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
 
@@ -127,7 +134,8 @@ namespace SongPlayHistory
             // Install event handlers.
             levelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
             levelDetailViewController.didPresentContentEvent += OnDidPresentContent;
-            //TODO: Should be notified when returned from the game play scene.
+            resultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
+            resultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
             // Create a HoverHint.
             //TODO: Avoid the use of an invisible button.
@@ -137,7 +145,7 @@ namespace SongPlayHistory
             var hiddenButtonStroke = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Stroke");
             var hiddenButtonGlow = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "GlowContainer");
             var hiddenButtonText = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Text");
-            hiddenButtonWrapper.anchoredPosition = new Vector2(18.5f, -4.4f);
+            hiddenButtonWrapper.anchoredPosition = new Vector2(18.5f, -4.4f); // TODO
             hiddenButtonWrapper.sizeDelta = (statsContainer.transform as RectTransform).sizeDelta;
             Destroy(hiddenButtonStroke.gameObject);
             Destroy(hiddenButtonGlow.gameObject);
@@ -148,44 +156,52 @@ namespace SongPlayHistory
             statsHoverHint.SetPrivateField("_hoverHintController", hoverHintController);
             statsHoverHint.name = name;
             statsHoverHint.text = "No record";
+
+            Logger.Log?.Debug($"Finished initializing {name}.");
+            isInitialized = true;
         }
 
-        private void OnDidChangeDifficultyBeatmap(StandardLevelDetailViewController levelDetail, IDifficultyBeatmap beatmap)
+        private void Refresh()
         {
-            var playerData = levelDetail.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
-            int playCount = GetPlayCountForBeatmap(playerData, beatmap);
-            playCountValue?.SetText(playCount > 0 ? playCount.ToString() : "-");
-        }
+            playCountValue?.SetText("-");
 
-        private void OnDidPresentContent(StandardLevelDetailViewController levelDetail, StandardLevelDetailViewController.ContentType contentType)
-        {
-            var beatmap = levelDetail.selectedDifficultyBeatmap;
-            if (beatmap == null || contentType != StandardLevelDetailViewController.ContentType.OwnedAndReady)
+            var beatmap = levelDetailViewController?.selectedDifficultyBeatmap;
+            if (beatmap == null)
+                return;
+
+            var playerDataModel = levelDetailViewController?.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
+            if (playerDataModel?.playerData == null)
+                return;
+
+            var playerLevelStats = playerDataModel.playerData.levelsStatsData?.FirstOrDefault(
+                    x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
+            if (playerLevelStats == null)
             {
-                playCountValue?.SetText("-");
+                Logger.Log?.Warn($"{nameof(PlayerLevelStatsData)} unavailable for {beatmap.level.levelID} - {beatmap.difficulty}.");
             }
             else
             {
-                var playerData = levelDetail.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
-                int playCount = GetPlayCountForBeatmap(playerData, beatmap);
+                int playCount = playerLevelStats.playCount;
                 playCountValue?.SetText(playCount > 0 ? playCount.ToString() : "-");
             }
         }
 
-        private int GetPlayCountForBeatmap(PlayerDataModelSO playerData, IDifficultyBeatmap beatmap)
+        private void OnDidChangeDifficultyBeatmap(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
         {
-            if (playerData?.playerData == null || beatmap == null)
-                return 0;
+            Refresh();
+        }
 
-            var playerLevelStats = playerData.playerData.levelsStatsData.FirstOrDefault(
-                x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
-            if (playerLevelStats == null) // Data corrupted?
-            {
-                Logger.Log?.Warn($"Unable to load {nameof(PlayerLevelStatsData)} for {beatmap.level.levelID} - {beatmap.difficulty}.");
-                return 0;
-            }
+        private void OnDidPresentContent(StandardLevelDetailViewController _, StandardLevelDetailViewController.ContentType contentType)
+        {
+            Refresh();
+        }
 
-            return playerLevelStats.playCount;
+        private void OnPlayResultDismiss(ResultsViewController resultsViewController)
+        {
+            var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
+            var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
+
+            Refresh();
         }
     }
 }
