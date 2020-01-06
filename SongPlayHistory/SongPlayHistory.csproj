@@ -36,6 +36,9 @@
     <Reference Include="BS_Utils">
       <HintPath>References\Plugins\BS_Utils.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json.12.0.0.0">
+      <HintPath>References\IPA\Libs\Newtonsoft.Json.12.0.0.0.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

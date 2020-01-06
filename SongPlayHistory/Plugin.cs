@@ -2,6 +2,8 @@
 using IPA;
 using IPA.Config;
 using IPA.Utilities;
+using Newtonsoft.Json;
+using System.IO;
 using UnityEngine.SceneManagement;
 
 namespace SongPlayHistory
@@ -22,11 +24,7 @@ namespace SongPlayHistory
             {
                 if (v.Value == null || v.Value.RegenerateConfig)
                 {
-                    p.Store(v.Value = new PluginConfig()
-                    {
-                        RegenerateConfig = false,
-                        Disabled = false,
-                    });
+                    p.Store(v.Value = new PluginConfig() { RegenerateConfig = false });
                 }
                 Config = v;
             });

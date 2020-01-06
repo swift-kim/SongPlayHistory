@@ -1,10 +1,12 @@
 ﻿using BS_Utils.Utilities;
 using HMUI;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static SongPlayHistory.PluginConfig;
 
 namespace SongPlayHistory
 {
@@ -15,6 +17,7 @@ namespace SongPlayHistory
         private StandardLevelDetailViewController levelDetailViewController;
         private TextMeshProUGUI playCountValue;
         private HoverHint statsHoverHint; // Note: The hint text should be in 9 lines or less.
+
         private bool isInitialized = false;
 
         internal static void OnLoad()
@@ -138,14 +141,15 @@ namespace SongPlayHistory
             resultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
             // Create a HoverHint.
-            //TODO: Avoid the use of an invisible button.
+            //TODO: Avoid using a button.
+            //TODO: Consider using BSML.
             var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
             var hiddenButton = Instantiate(playButton, statsContainer.transform);
             var hiddenButtonWrapper = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Wrapper");
             var hiddenButtonStroke = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Stroke");
             var hiddenButtonGlow = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "GlowContainer");
             var hiddenButtonText = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Text");
-            hiddenButtonWrapper.anchoredPosition = new Vector2(18.5f, -4.4f); // TODO
+            hiddenButtonWrapper.anchoredPosition = new Vector2(18.5f, -4.4f); // TODO: incompatibly hard-coded
             hiddenButtonWrapper.sizeDelta = (statsContainer.transform as RectTransform).sizeDelta;
             Destroy(hiddenButtonStroke.gameObject);
             Destroy(hiddenButtonGlow.gameObject);
@@ -198,10 +202,41 @@ namespace SongPlayHistory
 
         private void OnPlayResultDismiss(ResultsViewController resultsViewController)
         {
+            Refresh();
+
+            // Save the score to the config file.
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
             var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
+            var timeInMillis = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            Refresh();
+            var beatmapCharacteristicName = lastBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+            var difficulty = $"{lastBeatmap.level.levelID}___{(int)lastBeatmap.difficulty}___{beatmapCharacteristicName}";
+            var score = new Score
+            {
+                date = timeInMillis,
+                modifiedScore = lastResult.modifiedScore,
+                rawScore = lastResult.rawScore,
+                rank = (int)lastResult.rank,
+                fullCombo = lastResult.fullCombo,
+                cleared = lastResult.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared,
+                maxCombo = lastResult.maxCombo
+            };
+
+            var config = Plugin.Config?.Value;
+            if (config == null || Plugin.ConfigProvider == null)
+            {
+                Logger.Log?.Warn($"The config provider has not been initialized. Unable to save scores.");
+                return;
+            }
+
+            if (!config.Scores.ContainsKey(difficulty))
+            {
+                config.Scores.Add(difficulty, new List<Score>());
+            }
+            config.Scores[difficulty].Add(score);
+            config.LastUpdated = timeInMillis;
+
+            Plugin.ConfigProvider.Store(config);
         }
     }
 }
