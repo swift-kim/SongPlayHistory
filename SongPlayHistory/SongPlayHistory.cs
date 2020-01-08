@@ -6,7 +6,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static SongPlayHistory.PluginConfig;
 
 namespace SongPlayHistory
 {
@@ -213,13 +212,14 @@ namespace SongPlayHistory
             var difficulty = $"{lastBeatmap.level.levelID}___{(int)lastBeatmap.difficulty}___{beatmapCharacteristicName}";
             var score = new Score
             {
-                date = timeInMillis,
-                modifiedScore = lastResult.modifiedScore,
-                rawScore = lastResult.rawScore,
-                rank = (int)lastResult.rank,
-                fullCombo = lastResult.fullCombo,
-                cleared = lastResult.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared,
-                maxCombo = lastResult.maxCombo
+                Date = timeInMillis,
+                ModifiedScore = lastResult.modifiedScore,
+                RawScore = lastResult.rawScore,
+                Rank = (int)lastResult.rank,
+                FullCombo = lastResult.fullCombo,
+                Cleared = lastResult.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared,
+                MissedCount = lastResult.missedCount,
+                MaxCombo = lastResult.maxCombo
             };
 
             var config = Plugin.Config?.Value;

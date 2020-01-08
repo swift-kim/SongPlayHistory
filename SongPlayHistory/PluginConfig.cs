@@ -7,21 +7,9 @@ namespace SongPlayHistory
         public bool RegenerateConfig = false;
         public bool HideFailedScores = true;
         public bool ShowPlayCounts = true;
-        public int SchemaVersion = 1;
+        public bool SortByDate = false;
         public long LastUpdated = 0L;
-
-        // Using [levelID]___[difficulty]___[beatmapCharacteristicName] as a key for fast (de)serialization.
+        // Key: [levelID]___[difficulty]___[beatmapCharacteristicName]
         public Dictionary<string, IList<Score>> Scores = new Dictionary<string, IList<Score>>();
-
-        public class Score
-        {
-            public long date;
-            public int modifiedScore;
-            public int rawScore;
-            public int rank;
-            public bool fullCombo;
-            public bool cleared;
-            public int maxCombo;
-        }
     }
 }

@@ -90,6 +90,7 @@
     <Compile Include="Plugin.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PluginConfig.cs" />
+    <Compile Include="Score.cs" />
     <Compile Include="SongPlayHistory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
