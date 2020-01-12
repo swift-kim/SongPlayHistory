@@ -194,7 +194,7 @@ namespace SongPlayHistory
                 if (scores.Count() > 0)
                 {
                     StringBuilder builder = new StringBuilder(200);
-                    builder.AppendLine("Date / Modified Score / Rank");
+                    builder.AppendLine("Date / Score / Rank");
 
                     foreach (var score in scores)
                     {

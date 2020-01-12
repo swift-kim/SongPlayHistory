@@ -9,7 +9,9 @@ namespace SongPlayHistory
         public bool ShowPlayCounts = true;
         public bool SortByDate = false;
         public long LastUpdated = 0L;
-        // Key: [levelID]___[difficulty]___[beatmapCharacteristicName]
+
+        // User scores are stored in the plugin config file.
+        // Key: [levelID]___[difficulty]___[beatmapCharacteristicName] (e.g. PopStars___4___Standard)
         public Dictionary<string, IList<Score>> Scores = new Dictionary<string, IList<Score>>();
     }
 }
