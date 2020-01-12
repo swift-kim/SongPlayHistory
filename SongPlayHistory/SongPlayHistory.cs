@@ -3,6 +3,7 @@ using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -166,12 +167,49 @@ namespace SongPlayHistory
 
         private void Refresh()
         {
-            playCountValue?.SetText("-");
+            if (!isInitialized)
+                return;
+
+            playCountValue.SetText("-");
+            statsHoverHint.text = "No record";
 
             var beatmap = levelDetailViewController?.selectedDifficultyBeatmap;
             if (beatmap == null)
                 return;
 
+            var config = Plugin.Config?.Value;
+            if (config == null || Plugin.ConfigProvider == null)
+            {
+                Logger.Log?.Warn($"The config provider is not initialized.");
+                return;
+            }
+
+            // Read scores for the currently selected song from the plugin config.
+            var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+            var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
+            if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
+            {
+                var scores = config.HideFailedScores ? scoreList.Where(s => s.Cleared) : scoreList;
+                scores = scores.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(8);
+                if (scores.Count() > 0)
+                {
+                    StringBuilder builder = new StringBuilder(200);
+                    builder.AppendLine("Date / Modified Score / Rank");
+
+                    foreach (var score in scores)
+                    {
+                        var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(score.Date).LocalDateTime;
+                        builder.AppendLine($"{localDateTime.ToString("g")} / {score.ModifiedScore} / {(RankModel.Rank)score.Rank}");
+                    }
+
+                    statsHoverHint.text = builder.ToString();
+                }
+            }
+
+            if (!config.ShowPlayCounts)
+                return;
+
+            // Read play counts for the selected song from the player data model.
             var playerDataModel = levelDetailViewController?.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
             if (playerDataModel?.playerData == null)
                 return;
@@ -180,12 +218,12 @@ namespace SongPlayHistory
                     x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
             if (playerLevelStats == null)
             {
-                Logger.Log?.Warn($"{nameof(PlayerLevelStatsData)} unavailable for {beatmap.level.levelID} - {beatmap.difficulty}.");
+                Logger.Log?.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
             }
             else
             {
                 int playCount = playerLevelStats.playCount;
-                playCountValue?.SetText(playCount > 0 ? playCount.ToString() : "-");
+                playCountValue.SetText(playCount > 0 ? playCount.ToString() : "-");
             }
         }
 
@@ -201,9 +239,7 @@ namespace SongPlayHistory
 
         private void OnPlayResultDismiss(ResultsViewController resultsViewController)
         {
-            Refresh();
-
-            // Save the score to the config file.
+            // Retrieve the last play result.
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
             var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
             var timeInMillis = DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -222,21 +258,25 @@ namespace SongPlayHistory
                 MaxCombo = lastResult.maxCombo
             };
 
+            // Save the result to the plugin config file.
             var config = Plugin.Config?.Value;
             if (config == null || Plugin.ConfigProvider == null)
             {
-                Logger.Log?.Warn($"The config provider has not been initialized. Unable to save scores.");
-                return;
+                Logger.Log?.Warn($"The config provider is not initialized. Unable to save scores.");
             }
-
-            if (!config.Scores.ContainsKey(difficulty))
+            else
             {
-                config.Scores.Add(difficulty, new List<Score>());
-            }
-            config.Scores[difficulty].Add(score);
-            config.LastUpdated = timeInMillis;
+                if (!config.Scores.ContainsKey(difficulty))
+                {
+                    config.Scores.Add(difficulty, new List<Score>());
+                }
+                config.Scores[difficulty].Add(score);
+                config.LastUpdated = timeInMillis;
 
-            Plugin.ConfigProvider.Store(config);
+                Plugin.ConfigProvider.Store(config);
+            }
+
+            Refresh();
         }
     }
 }

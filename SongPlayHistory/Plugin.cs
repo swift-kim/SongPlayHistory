@@ -2,8 +2,6 @@
 using IPA;
 using IPA.Config;
 using IPA.Utilities;
-using Newtonsoft.Json;
-using System.IO;
 using UnityEngine.SceneManagement;
 
 namespace SongPlayHistory
