@@ -6,7 +6,7 @@ namespace SongPlayHistory
 {
     internal class LocalDashboardController : BSMLResourceViewController
     {
-        public override string ResourceName => "SongPlayHistory.Views.LocalDashboard.bsml";
+        public override string ResourceName => $"{nameof(SongPlayHistory)}.Views.LocalDashboard.bsml";
 
         [UIComponent("some-text")]
         private TextMeshProUGUI text;

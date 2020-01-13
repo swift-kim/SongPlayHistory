@@ -1,4 +1,5 @@
-﻿using BS_Utils.Utilities;
+﻿using BeatSaberMarkupLanguage.Settings;
+using BS_Utils.Utilities;
 using IPA;
 using IPA.Config;
 using IPA.Utilities;
@@ -8,7 +9,7 @@ namespace SongPlayHistory
 {
     public class Plugin : IBeatSaberPlugin
     {
-        internal static string Name => "SongPlayHistory";
+        internal static string Name => "Song Play History";
 
         internal static IConfigProvider ConfigProvider;
         internal static Ref<PluginConfig> Config;
@@ -30,13 +31,16 @@ namespace SongPlayHistory
 
         public void OnApplicationStart()
         {
+            Logger.Log?.Debug("OnApplicationStart");
+
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuLoadedFresh;
         }
 
         private void OnMenuLoadedFresh()
         {
-            Logger.Log?.Debug("OnMenuLoadedFresh");
+            BSMLSettings.instance.AddSettingsMenu(Name, $"{nameof(SongPlayHistory)}.Views.Settings.bsml", SettingsController.instance);
+
             ConfigProvider.Store(Config.Value);
             PlayerStatsUIOverload.OnLoad();
         }

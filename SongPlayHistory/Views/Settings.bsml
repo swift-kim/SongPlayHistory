@@ -1,0 +1,5 @@
+﻿﻿<settings-container>
+  <bool-setting text='Hide failed scores' value='hide-failed-scores' hover-hint='Count only cleared scores if enabled'></bool-setting>
+  <bool-setting text='Show play counts' value='show-play-counts' hover-hint='Show my play counts in the song list'></bool-setting>
+  <bool-setting text='Sort by date' value='sort-by-date' hover-hint='Sort'></bool-setting>
+</settings-container>
