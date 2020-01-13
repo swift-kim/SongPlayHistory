@@ -6,6 +6,8 @@
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
   "version": "0.1.0",
-  "dependsOn": {},
+  "dependsOn": {
+    "BeatSaberMarkupLanguage": "^1.1.2"
+  },
   "features": []
 }

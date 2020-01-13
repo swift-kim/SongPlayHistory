@@ -38,7 +38,7 @@ namespace SongPlayHistory
         {
             Logger.Log?.Debug("OnMenuLoadedFresh");
             ConfigProvider.Store(Config.Value);
-            SongPlayHistory.OnLoad();
+            PlayerStatsUIOverload.OnLoad();
         }
 
         public void OnApplicationQuit()

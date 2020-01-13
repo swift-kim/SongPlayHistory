@@ -1,3 +1,3 @@
 ﻿# SongPlayHistory
 
-Save and display your scores in local leaderboards. (_WIP_)
+A Beat Saber plugin to save per-song scores and display in the song list. (_WIP_)

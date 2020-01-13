@@ -1,5 +1,5 @@
-﻿using BS_Utils.Utilities;
-using HMUI;
+﻿using BeatSaberMarkupLanguage;
+using BS_Utils.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,22 +10,19 @@ using UnityEngine.UI;
 
 namespace SongPlayHistory
 {
-    public class SongPlayHistory : MonoBehaviour
+    public class PlayerStatsUIOverload : MonoBehaviour
     {
-        public static SongPlayHistory Instance;
+        public static PlayerStatsUIOverload Instance;
 
-        private StandardLevelDetailViewController levelDetailViewController;
-        private TextMeshProUGUI playCountValue;
-        private HoverHint statsHoverHint; // Note: The hint text should be in 9 lines or less.
-
-        private bool isInitialized = false;
+        public StandardLevelDetailViewController LevelDetailViewController;
+        public TextMeshProUGUI PlayCountValue;
 
         internal static void OnLoad()
         {
             if (Instance != null)
                 return;
 
-            _ = new GameObject(nameof(SongPlayHistory)).AddComponent<SongPlayHistory>();
+            _ = new GameObject(nameof(PlayerStatsUIOverload)).AddComponent<PlayerStatsUIOverload>();
         }
 
         #region Monobehaviour Messages
@@ -95,21 +92,16 @@ namespace SongPlayHistory
         }
         #endregion
 
-        /// <summary>
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Fail fast if anything goes wrong.</exception>
         private void Initialize()
         {
-            if (isInitialized)
-                return;
-
             // Find components of our interest.
             var flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             var resultsViewController = flowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
             var levelSelectionNavController = flowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
-            levelDetailViewController = levelSelectionNavController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
-            var standardLevelDetailView = levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
+            LevelDetailViewController = levelSelectionNavController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
+            var standardLevelDetailView = LevelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
             var statsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
+            var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
 
             // What are inside statsContainer:
             // - Stats [RectTransform/LayoutElement]
@@ -119,13 +111,24 @@ namespace SongPlayHistory
             var highscore = statsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
             var maxRank = statsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
 
-            // Add our component.
+            // Add our components (PlayCountValue and moreButton).
             var playCount = Instantiate(maxCombo, statsContainer.transform);
             playCount.name = "PlayCount";
             var playCountTitle = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
-            playCountValue = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
             playCountTitle.SetText("Play Count");
-            playCountValue.SetText("-");
+            PlayCountValue = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
+            PlayCountValue.SetText("-");
+
+            var moreButton = Instantiate(playButton, statsContainer.transform);
+            moreButton.name = "MoreButton";
+            moreButton.SetButtonText("...");
+            moreButton.SetButtonTextSize(2.0f);
+            moreButton.onClick.RemoveAllListeners();
+            moreButton.onClick.AddListener(() =>
+            {
+                var viewController = BeatSaberUI.CreateViewController<LocalDashboardController>();
+                flowCoordinator.InvokeMethod("PresentViewController", new object[] { viewController, null, false });
+            });
 
             // Resize and align components.
             // The full width of statsRect is 72, but we need some padding at each end.
@@ -134,46 +137,25 @@ namespace SongPlayHistory
             maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 32.0f, 16.0f);
             playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 6.0f, 16.0f);
 
+            (moreButton.transform as RectTransform).sizeDelta = new Vector2(6.0f, 6.0f);
+            (moreButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 0.0f, 6.0f);
+            //var moreButtonWrapper = moreButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Wrapper");
+
             // Install event handlers.
-            levelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
-            levelDetailViewController.didPresentContentEvent += OnDidPresentContent;
+            LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
+            LevelDetailViewController.didPresentContentEvent += OnDidPresentContent;
             resultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
             resultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
-            // Create a HoverHint.
-            //TODO: Avoid using a button.
-            //TODO: Consider using BSML.
-            var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            var hiddenButton = Instantiate(playButton, statsContainer.transform);
-            var hiddenButtonWrapper = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Wrapper");
-            var hiddenButtonStroke = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Stroke");
-            var hiddenButtonGlow = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "GlowContainer");
-            var hiddenButtonText = hiddenButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Text");
-            hiddenButtonWrapper.anchoredPosition = new Vector2(18.5f, -4.4f); // TODO: incompatibly hard-coded
-            hiddenButtonWrapper.sizeDelta = (statsContainer.transform as RectTransform).sizeDelta;
-            Destroy(hiddenButtonStroke.gameObject);
-            Destroy(hiddenButtonGlow.gameObject);
-            Destroy(hiddenButtonText.gameObject);
-            var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-            var hoverHintHolder = hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();
-            statsHoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
-            statsHoverHint.SetPrivateField("_hoverHintController", hoverHintController);
-            statsHoverHint.name = name;
-            statsHoverHint.text = "No record";
-
             Logger.Log?.Debug($"Finished initializing {name}.");
-            isInitialized = true;
         }
 
         private void Refresh()
         {
-            if (!isInitialized)
-                return;
+            PlayCountValue.SetText("-");
+            //StatsHoverHint.text = "No record available";
 
-            playCountValue.SetText("-");
-            statsHoverHint.text = "No record";
-
-            var beatmap = levelDetailViewController?.selectedDifficultyBeatmap;
+            var beatmap = LevelDetailViewController?.selectedDifficultyBeatmap;
             if (beatmap == null)
                 return;
 
@@ -202,7 +184,7 @@ namespace SongPlayHistory
                         builder.AppendLine($"{localDateTime.ToString("g")} / {score.ModifiedScore} / {(RankModel.Rank)score.Rank}");
                     }
 
-                    statsHoverHint.text = builder.ToString();
+                    //StatsHoverHint.text = builder.ToString();
                 }
             }
 
@@ -210,7 +192,7 @@ namespace SongPlayHistory
                 return;
 
             // Read play counts for the selected song from the player data model.
-            var playerDataModel = levelDetailViewController?.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
+            var playerDataModel = LevelDetailViewController?.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
             if (playerDataModel?.playerData == null)
                 return;
 
@@ -223,7 +205,7 @@ namespace SongPlayHistory
             else
             {
                 int playCount = playerLevelStats.playCount;
-                playCountValue.SetText(playCount > 0 ? playCount.ToString() : "-");
+                PlayCountValue.SetText(playCount > 0 ? playCount.ToString() : "-");
             }
         }
 
@@ -242,13 +224,13 @@ namespace SongPlayHistory
             // Retrieve the last play result.
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
             var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
-            var timeInMillis = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var unixDateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             var beatmapCharacteristicName = lastBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
             var difficulty = $"{lastBeatmap.level.levelID}___{(int)lastBeatmap.difficulty}___{beatmapCharacteristicName}";
             var score = new Score
             {
-                Date = timeInMillis,
+                Date = unixDateTime,
                 ModifiedScore = lastResult.modifiedScore,
                 RawScore = lastResult.rawScore,
                 Rank = (int)lastResult.rank,
@@ -271,7 +253,7 @@ namespace SongPlayHistory
                     config.Scores.Add(difficulty, new List<Score>());
                 }
                 config.Scores[difficulty].Add(score);
-                config.LastUpdated = timeInMillis;
+                config.LastUpdated = unixDateTime;
 
                 Plugin.ConfigProvider.Store(config);
             }

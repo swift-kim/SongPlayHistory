@@ -33,8 +33,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BSML">
+      <HintPath>References\Plugins\BSML.dll</HintPath>
+    </Reference>
     <Reference Include="BS_Utils">
       <HintPath>References\Plugins\BS_Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="HMLib">
+      <HintPath>References\Beat Saber_Data\Managed\HMLib.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json.12.0.0.0">
       <HintPath>References\IPA\Libs\Newtonsoft.Json.12.0.0.0.dll</HintPath>
@@ -87,11 +93,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LocalDashboardViewController.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="Score.cs" />
-    <Compile Include="SongPlayHistory.cs" />
+    <Compile Include="PlayerStatsUIOverload.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +107,7 @@
   <ItemGroup>
     <None Include="CreateJunctions.bat" />
     <None Include=".gitignore" />
+    <EmbeddedResource Include="Views\LocalDashboard.bsml" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
