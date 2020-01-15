@@ -4,13 +4,6 @@ namespace SongPlayHistory
 {
     public class SettingsController : PersistentSingleton<SettingsController>
     {
-        [UIValue("hide-failed-scores")]
-        public bool HideFailedScores
-        {
-            get => Plugin.Config.Value.HideFailedScores;
-            set => Plugin.Config.Value.HideFailedScores = value;
-        }
-
         [UIValue("show-play-counts")]
         public bool ShowPlayCounts
         {
@@ -29,7 +22,6 @@ namespace SongPlayHistory
         public void OnApply()
         {
             Logger.Log?.Info("Saving configs...");
-            Plugin.Config.Value.HideFailedScores = HideFailedScores;
             Plugin.Config.Value.ShowPlayCounts = ShowPlayCounts;
             Plugin.Config.Value.SortByDate = SortByDate;
             Plugin.ConfigProvider.Store(Plugin.Config.Value);

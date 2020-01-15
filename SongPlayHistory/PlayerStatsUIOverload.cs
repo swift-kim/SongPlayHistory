@@ -171,8 +171,7 @@ namespace SongPlayHistory
             var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
             if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
             {
-                var scores = config.HideFailedScores ? scoreList.Where(s => s.Cleared) : scoreList;
-                scores = scores.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(8);
+                var scores = scoreList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(8);
                 if (scores.Count() > 0)
                 {
                     StringBuilder builder = new StringBuilder(200);
@@ -235,7 +234,6 @@ namespace SongPlayHistory
                 RawScore = lastResult.rawScore,
                 Rank = (int)lastResult.rank,
                 FullCombo = lastResult.fullCombo,
-                Cleared = lastResult.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared,
                 MissedCount = lastResult.missedCount,
                 MaxCombo = lastResult.maxCombo
             };
@@ -253,7 +251,6 @@ namespace SongPlayHistory
                     config.Scores.Add(difficulty, new List<Score>());
                 }
                 config.Scores[difficulty].Add(score);
-                config.LastUpdated = unixDateTime;
 
                 Plugin.ConfigProvider.Store(config);
             }
