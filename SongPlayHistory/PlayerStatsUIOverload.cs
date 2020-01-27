@@ -213,7 +213,8 @@ namespace SongPlayHistory
                 Destroy(_playCountRect.gameObject);
                 _playCountRect = null;
 
-                // Resize and align.
+                // The MenuScene is not always reloaded on saving the config.
+                // In that case we have to manually restore initial values.
                 maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 21.4f);
                 highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 21.4f, 21.3f);
                 maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 42.7f, 21.3f);
