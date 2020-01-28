@@ -1,12 +1,16 @@
 ﻿# SongPlayHistory
 
-A Beat Saber plugin to save your play records and display in the song list, allowing you to see your progress on each beatmap. (_WIP_)
+Compare your own scores.
 
 ## Screenshots
 
 ## Features
 
-## Caveats
+- Record play results to a file
+- Display scores and total play counts
 
-- Play records are saved only if the plguin is installed and enabled. Your previous records will not be available and thus not shown in the leaderboard.
-- The data file is located in Beat Saber's _UserData_ directory. I have no idea what will happen if the data file grows too large. If the file makes any problem or delay, first delete or make an archive of it, and report to _peperoro#1013_ at discord to improve the plugin.
+## Notes
+
+- You will not be able to see your previous records (that you made before installing the plugin) since they cannot be retrieved from anywhere.
+- The data file is located in Beat Saber's _UserData_ directory.
+- I haven't fully tested the plugin against various situations. If the file grows too large or makes any problem or delay, please report to _peperoro#1013 (Discord)_ for future improvement.
