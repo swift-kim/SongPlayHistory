@@ -1,5 +1,5 @@
-﻿using BeatSaberMarkupLanguage;
-using BS_Utils.Utilities;
+﻿using BS_Utils.Utilities;
+using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +16,7 @@ namespace SongPlayHistory
 
         private StandardLevelDetailViewController _levelDetailViewController;
         private GameObject _playerStatsContainer;
+        private HoverHint _statsHoverHint;
         private RectTransform _playCountRect;
 
         internal static void OnLoad()
@@ -103,20 +104,20 @@ namespace SongPlayHistory
             var standardLevelDetailView = _levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
             _playerStatsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
 
-            // Create a button.
+            // Create a virtual button for score display.
             var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            var moreButton = Instantiate(playButton, _playerStatsContainer.transform);
-            moreButton.name = "MoreButton";
-            moreButton.SetButtonText("...");
-            moreButton.SetButtonTextSize(2.0f);
-            moreButton.onClick.RemoveAllListeners();
-            moreButton.onClick.AddListener(() =>
+            var hiddenButton = Instantiate(playButton, _playerStatsContainer.transform);
+            (hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 70.0f);
+            foreach (var tf in hiddenButton.GetComponentsInChildren<Transform>())
             {
-                var viewController = BeatSaberUI.CreateViewController<LocalDashboardController>();
-                flowCoordinator.InvokeMethod("PresentViewController", new object[] { viewController, null, false });
-            });
-            (moreButton.transform as RectTransform).sizeDelta = new Vector2(6.0f, 6.0f);
-            (moreButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 0.0f, 6.0f);
+                if (new []{ "BG", "GlowContainer", "Stroke", "Text" }.Contains(tf.name))
+                    Destroy(tf.gameObject);
+            }
+            var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
+            var hoverHintHolder = hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();
+            _statsHoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
+            _statsHoverHint.SetPrivateField("_hoverHintController", hoverHintController);
+            _statsHoverHint.name = name;
 
             // Install event handlers.
             _levelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
@@ -133,8 +134,8 @@ namespace SongPlayHistory
             if (beatmap == null)
                 return;
 
-            if (_playerStatsContainer == null)
-                return;
+            // _statsHoverHint cannot be null here.
+            _statsHoverHint.text = "No record";
 
             var config = Plugin.Config?.Value;
             if (config == null)
@@ -143,25 +144,24 @@ namespace SongPlayHistory
                 return;
             }
 
-            // Read scores for the currently selected song from the plugin config.
-            // TODO: Deprecated.
+            // Read scores for the currently selected song.
             var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
             var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
             if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
             {
-                var scores = scoreList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(8);
+                // Note: Max lines = 9
+                var scores = scoreList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
                 if (scores.Count() > 0)
                 {
                     StringBuilder builder = new StringBuilder(200);
-                    builder.AppendLine("Date / Score / Rank");
 
                     foreach (var score in scores)
                     {
                         var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(score.Date).LocalDateTime;
-                        builder.AppendLine($"{localDateTime.ToString("g")} / {score.ModifiedScore} / {(RankModel.Rank)score.Rank}");
+                        builder.AppendLine($"[{localDateTime.ToString("g")}] {score.ModifiedScore} ({(RankModel.Rank)score.Rank})");
                     }
 
-                    //StatsHoverHint.text = builder.ToString();
+                    _statsHoverHint.text = builder.ToString();
                 }
             }
 

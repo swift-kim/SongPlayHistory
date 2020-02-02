@@ -93,7 +93,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LocalDashboardController.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PluginConfig.cs" />
@@ -108,7 +107,6 @@
   <ItemGroup>
     <None Include="CreateJunctions.bat" />
     <None Include=".gitignore" />
-    <EmbeddedResource Include="Views\LocalDashboard.bsml" />
     <EmbeddedResource Include="Views\Settings.bsml" />
   </ItemGroup>
   <ItemGroup />
