@@ -1,7 +1,7 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
   "author": "peperoro",
-  "description": "Compare your own scores",
+  "description": "Track your scores",
   "gameVersion": "1.6.1",
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
