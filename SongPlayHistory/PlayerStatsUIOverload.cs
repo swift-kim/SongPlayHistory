@@ -16,7 +16,8 @@ namespace SongPlayHistory
 
         private StandardLevelDetailViewController _levelDetailViewController;
         private GameObject _playerStatsContainer;
-        private HoverHint _statsHoverHint;
+        private Button _hiddenButton;
+        private HoverHint _hoverHint;
         private RectTransform _playCountRect;
 
         internal static void OnLoad()
@@ -105,24 +106,31 @@ namespace SongPlayHistory
             _playerStatsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
 
             // Create a virtual button for score display.
-            var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            var hiddenButton = Instantiate(playButton, _playerStatsContainer.transform);
-            (hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 70.0f);
-            foreach (var tf in hiddenButton.GetComponentsInChildren<Transform>())
+            if (_hiddenButton == null)
             {
-                if (new []{ "BG", "GlowContainer", "Stroke", "Text" }.Contains(tf.name))
-                    Destroy(tf.gameObject);
+                var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
+                _hiddenButton = Instantiate(playButton, _playerStatsContainer.transform);
+                (_hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 70.0f);
+                foreach (var tf in _hiddenButton.GetComponentsInChildren<Transform>())
+                {
+                    if (new[] { "BG", "GlowContainer", "Stroke", "Text" }.Contains(tf.name))
+                        Destroy(tf.gameObject);
+                }
+                var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
+                var hoverHintHolder = _hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();
+                _hoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
+                _hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
+                _hoverHint.name = name;
             }
-            var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-            var hoverHintHolder = hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();
-            _statsHoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
-            _statsHoverHint.SetPrivateField("_hoverHintController", hoverHintController);
-            _statsHoverHint.name = name;
 
             // Install event handlers.
+            _levelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
             _levelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
+            _levelDetailViewController.didPresentContentEvent -= OnDidPresentContent;
             _levelDetailViewController.didPresentContentEvent += OnDidPresentContent;
+            resultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
             resultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
+            resultsViewController.restartButtonPressedEvent -= OnPlayResultDismiss;
             resultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
             Logger.Log?.Debug($"Finished initializing {name}.");
@@ -130,12 +138,14 @@ namespace SongPlayHistory
 
         internal void Refresh()
         {
+            Logger.Log?.Debug("Refreshing...");
+
             var beatmap = _levelDetailViewController?.selectedDifficultyBeatmap;
             if (beatmap == null)
                 return;
 
-            // _statsHoverHint cannot be null here.
-            _statsHoverHint.text = "No record";
+            // _hoverHint cannot be null here.
+            _hoverHint.text = "No record";
 
             var config = Plugin.Config?.Value;
             if (config == null)
@@ -161,7 +171,7 @@ namespace SongPlayHistory
                         builder.AppendLine($"[{localDateTime.ToString("g")}] {score.ModifiedScore} ({(RankModel.Rank)score.Rank})");
                     }
 
-                    _statsHoverHint.text = builder.ToString();
+                    _hoverHint.text = builder.ToString();
                 }
             }
 
@@ -182,7 +192,8 @@ namespace SongPlayHistory
                     var playCountTitle = _playCountRect.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
                     playCountTitle.SetText("Play Count");
 
-                    // Resize and align. The initial width is 64.
+                    // Resize and align.
+                    // The original width is 70 but we only use 66 here (may be changed later).
                     maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, -2.0f, 16.5f);
                     highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 14.5f, 16.5f);
                     maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 31.0f, 16.5f);
@@ -215,9 +226,9 @@ namespace SongPlayHistory
 
                 // The MenuScene is not always reloaded on saving the config.
                 // In that case we have to manually restore initial values.
-                maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 21.4f);
-                highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 21.4f, 21.3f);
-                maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 42.7f, 21.3f);
+                maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 23.4f);
+                highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 23.4f, 23.3f);
+                maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 46.7f, 23.3f);
             }
         }
 
@@ -228,7 +239,10 @@ namespace SongPlayHistory
 
         private void OnDidPresentContent(StandardLevelDetailViewController _, StandardLevelDetailViewController.ContentType contentType)
         {
-            Refresh();
+            if (contentType != StandardLevelDetailViewController.ContentType.Loading)
+            {
+                Refresh();
+            }
         }
 
         private void OnPlayResultDismiss(ResultsViewController resultsViewController)

@@ -5,7 +5,7 @@
   "gameVersion": "1.6.1",
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "dependsOn": 
   {
     "BeatSaberMarkupLanguage": "^1.1.2"
