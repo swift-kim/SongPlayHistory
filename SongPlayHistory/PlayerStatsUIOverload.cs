@@ -14,9 +14,9 @@ namespace SongPlayHistory
     {
         public static PlayerStatsUIOverload Instance;
 
+        private bool _isInitialized = false;
         private StandardLevelDetailViewController _levelDetailViewController;
         private GameObject _playerStatsContainer;
-        private Button _hiddenButton;
         private HoverHint _hoverHint;
         private RectTransform _playCountRect;
 
@@ -97,6 +97,9 @@ namespace SongPlayHistory
 
         private void Initialize()
         {
+            if (_isInitialized)
+                return;
+
             // Find components of our interest.
             var flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             var resultsViewController = flowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
@@ -106,22 +109,19 @@ namespace SongPlayHistory
             _playerStatsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
 
             // Create a virtual button for score display.
-            if (_hiddenButton == null)
+            var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
+            var hiddenButton = Instantiate(playButton, _playerStatsContainer.transform);
+            (hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 70.0f);
+            foreach (var tf in hiddenButton.GetComponentsInChildren<Transform>())
             {
-                var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-                _hiddenButton = Instantiate(playButton, _playerStatsContainer.transform);
-                (_hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 70.0f);
-                foreach (var tf in _hiddenButton.GetComponentsInChildren<Transform>())
-                {
-                    if (new[] { "BG", "GlowContainer", "Stroke", "Text" }.Contains(tf.name))
-                        Destroy(tf.gameObject);
-                }
-                var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-                var hoverHintHolder = _hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();
-                _hoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
-                _hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
-                _hoverHint.name = name;
+                if (new[] { "BG", "GlowContainer", "Stroke", "Text" }.Contains(tf.name))
+                    Destroy(tf.gameObject);
             }
+            var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
+            var hoverHintHolder = hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();
+            _hoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
+            _hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
+            _hoverHint.name = name;
 
             // Install event handlers.
             _levelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
@@ -134,6 +134,7 @@ namespace SongPlayHistory
             resultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
             Logger.Log?.Debug($"Finished initializing {name}.");
+            _isInitialized = true;
         }
 
         internal void Refresh()
@@ -160,15 +161,18 @@ namespace SongPlayHistory
             if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
             {
                 // Note: Max lines = 9
-                var scores = scoreList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
-                if (scores.Count() > 0)
+                var orderedList = scoreList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
+                if (orderedList.Count() > 0)
                 {
+                    var maxRawScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
                     StringBuilder builder = new StringBuilder(200);
 
-                    foreach (var score in scores)
+                    foreach (var elem in orderedList)
                     {
-                        var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(score.Date).LocalDateTime;
-                        builder.AppendLine($"[{localDateTime.ToString("g")}] {score.ModifiedScore} ({(RankModel.Rank)score.Rank})");
+                        var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(elem.Date).LocalDateTime;
+                        var modifiedScore = elem.ModifiedScore + (elem.RawScore != elem.ModifiedScore ? "*" : "");
+                        var accuracy = elem.RawScore / (float)maxRawScore * 100f;
+                        builder.AppendLine($"[{localDateTime.ToString("g")}] {modifiedScore} ({accuracy:0.00}%)");
                     }
 
                     _hoverHint.text = builder.ToString();
@@ -247,39 +251,42 @@ namespace SongPlayHistory
 
         private void OnPlayResultDismiss(ResultsViewController resultsViewController)
         {
-            // Get the last play result.
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
-            var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
-            var unixDateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            var beatmapCharacteristicName = lastBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
-            var difficulty = $"{lastBeatmap.level.levelID}___{(int)lastBeatmap.difficulty}___{beatmapCharacteristicName}";
-            var score = new Score
+            // Do not save failed records.
+            if (lastResult.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
             {
-                Date = unixDateTime,
-                ModifiedScore = lastResult.modifiedScore,
-                RawScore = lastResult.rawScore,
-                Rank = (int)lastResult.rank,
-                FullCombo = lastResult.fullCombo,
-                MissedCount = lastResult.missedCount,
-                MaxCombo = lastResult.maxCombo
-            };
+                var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
+                var unixDateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            // Save the result to the plugin config file.
-            var config = Plugin.Config?.Value;
-            if (config == null || Plugin.ConfigProvider == null)
-            {
-                Logger.Log?.Warn($"The config provider is not initialized. Unable to save scores.");
-            }
-            else
-            {
-                if (!config.Scores.ContainsKey(difficulty))
+                var beatmapCharacteristicName = lastBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+                var difficulty = $"{lastBeatmap.level.levelID}___{(int)lastBeatmap.difficulty}___{beatmapCharacteristicName}";
+                var score = new Score
                 {
-                    config.Scores.Add(difficulty, new List<Score>());
-                }
-                config.Scores[difficulty].Add(score);
+                    Date = unixDateTime,
+                    ModifiedScore = lastResult.modifiedScore,
+                    RawScore = lastResult.rawScore,
+                    Rank = (int)lastResult.rank,
+                    FullCombo = lastResult.fullCombo,
+                    MissedCount = lastResult.missedCount,
+                    MaxCombo = lastResult.maxCombo
+                };
 
-                Plugin.ConfigProvider.Store(config);
+                var config = Plugin.Config?.Value;
+                if (config == null || Plugin.ConfigProvider == null)
+                {
+                    Logger.Log?.Warn($"The config provider is not initialized. Unable to save scores.");
+                }
+                else
+                {
+                    if (!config.Scores.ContainsKey(difficulty))
+                    {
+                        config.Scores.Add(difficulty, new List<Score>());
+                    }
+                    config.Scores[difficulty].Add(score);
+
+                    Plugin.ConfigProvider.Store(config);
+                }
             }
 
             Refresh();
