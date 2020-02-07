@@ -1,6 +1,8 @@
 ﻿# SongPlayHistory
 
-Track your scores and beat yourself.
+[![release](https://img.shields.io/github/release/swift-kim/SongPlayHistory.svg)](https://github.com/swift-kim/SongPlayHistory/releases)
+
+Track all your scores.
 
 ## Screenshot
 
@@ -15,7 +17,7 @@ Track your scores and beat yourself.
 ## Notes
 
 - The play count also counts failed plays.
-- It's unable to see your previous records (that you achieved before installing this plugin) as they are not stored anywhere.
-- No more than 9 scores will be shown at once due to space limit.
-- The data file is located in Beat Saber's _UserData_ directory. The file contains some more details about your plays. The data are not uploaded anywhere so you have to backup this file when re-installing the game.
-- This plugin is still under tests. If you find any problem with this plugin, please report to _peperoro#1013 (Discord)_ for future improvement.
+- It's unable to see your previous records (that you achieved before installing this mod) as they are just lost.
+- The data file is located in Beat Saber's _UserData_ directory. The file contains some more details about your plays. You can also delete individual records if you want.
+- The data are not uploaded anywhere so you have to **backup** the file when re-installing the game.
+- If you run into any problem, please contact me either via Discord _(peperoro#1013)_ or by filing an issue.
