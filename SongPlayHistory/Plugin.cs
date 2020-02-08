@@ -39,10 +39,10 @@ namespace SongPlayHistory
 
         private void OnMenuLoadedFresh()
         {
-            BSMLSettings.instance.AddSettingsMenu(Name, $"{nameof(SongPlayHistory)}.Views.Settings.bsml", SettingsController.instance);
+            BSMLSettings.instance.AddSettingsMenu(Name, $"SongPlayHistory.Views.Settings.bsml", SettingsController.instance);
 
             ConfigProvider.Store(Config.Value);
-            PlayerStatsUIOverload.OnLoad();
+            SongPlayHistory.OnLoad();
         }
 
         public void OnApplicationQuit()
