@@ -21,9 +21,7 @@ namespace SongPlayHistory
         [UIAction("#apply")]
         public void OnApply()
         {
-            Logger.Log?.Info("Saving configs...");
-            Plugin.Config.Value.ShowPlayCounts = ShowPlayCounts;
-            Plugin.Config.Value.SortByDate = SortByDate;
+            Logger.Log?.Info("Applying settings...");
             Plugin.ConfigProvider.Store(Plugin.Config.Value);
         }
     }

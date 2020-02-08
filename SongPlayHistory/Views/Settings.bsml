@@ -1,4 +1,4 @@
 ﻿<settings-container>
-  <bool-setting text='Show play counts' value='show-play-counts' hover-hint='Display play counts in the song list'></bool-setting>
-  <bool-setting text='Sort by date' value='sort-by-date' hover-hint='Sort scores in time order'></bool-setting>
+  <bool-setting text='Show Play Counts' value='show-play-counts' hover-hint='Display play counts in the song list'></bool-setting>
+  <bool-setting text='Sort by Date' value='sort-by-date' hover-hint='Sort by dates or sort by scores'></bool-setting>
 </settings-container>
