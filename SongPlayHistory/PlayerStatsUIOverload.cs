@@ -139,7 +139,7 @@ namespace SongPlayHistory
 
         internal void Refresh()
         {
-            Logger.Log?.Debug("Refreshing...");
+            Logger.Log?.Info("Refreshing...");
 
             var beatmap = _levelDetailViewController?.selectedDifficultyBeatmap;
             if (beatmap == null)
@@ -179,10 +179,6 @@ namespace SongPlayHistory
                 }
             }
 
-            // What are inside PlayerStatsContainer:
-            // - Stats [RectTransform/LayoutElement]
-            //   - MaxCombo, Highscore, MaxRank [RectTransform]
-            //     - Title, Value [RectTransform/(Localized)TextMeshProUGUI]
             var maxCombo = _playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
             var highscore = _playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
             var maxRank = _playerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
@@ -229,7 +225,7 @@ namespace SongPlayHistory
                 _playCountRect = null;
 
                 // The MenuScene is not always reloaded on saving the config.
-                // In that case we have to manually restore initial values.
+                // In that case we have to manually restore original values.
                 maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 23.4f);
                 highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 23.4f, 23.3f);
                 maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 46.7f, 23.3f);
@@ -266,10 +262,6 @@ namespace SongPlayHistory
                     Date = unixDateTime,
                     ModifiedScore = lastResult.modifiedScore,
                     RawScore = lastResult.rawScore,
-                    Rank = (int)lastResult.rank,
-                    FullCombo = lastResult.fullCombo,
-                    MissedCount = lastResult.missedCount,
-                    MaxCombo = lastResult.maxCombo
                 };
 
                 var config = Plugin.Config?.Value;
