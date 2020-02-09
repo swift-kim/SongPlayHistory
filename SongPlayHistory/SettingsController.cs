@@ -11,6 +11,13 @@ namespace SongPlayHistory
             set => Plugin.Config.Value.ShowPlayCounts = value;
         }
 
+        [UIValue("show-votes")]
+        public bool ShowVotes
+        {
+            get => Plugin.Config.Value.ShowVotes;
+            set => Plugin.Config.Value.ShowVotes = value;
+        }
+
         [UIValue("sort-by-date")]
         public bool SortByDate
         {
@@ -21,8 +28,9 @@ namespace SongPlayHistory
         [UIAction("#apply")]
         public void OnApply()
         {
-            Logger.Log?.Info("Applying settings...");
+            Logger.Log?.Debug("Applying settings...");
             Plugin.ConfigProvider.Store(Plugin.Config.Value);
+            Plugin.ApplyHarmonyPatch(ShowVotes);
         }
     }
 }

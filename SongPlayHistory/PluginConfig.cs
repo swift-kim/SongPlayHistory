@@ -6,6 +6,7 @@ namespace SongPlayHistory
     {
         public bool RegenerateConfig = false;
         public bool ShowPlayCounts = true;
+        public bool ShowVotes = true;
         public bool SortByDate = false;
 
         // User scores are stored in the config file.

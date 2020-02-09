@@ -1,4 +1,5 @@
 ﻿<settings-container>
-  <bool-setting text='Show Play Counts' value='show-play-counts' hover-hint='Display play counts in the song list'></bool-setting>
+  <bool-setting text='Show Play Counts' value='show-play-counts' hover-hint='Display your play counts in the song list'></bool-setting>
+  <bool-setting text='Show Up/Downvotes' value='show-votes' hover-hint='Display your BeatSaverVoting data in the song list'></bool-setting>
   <bool-setting text='Sort by Date' value='sort-by-date' hover-hint='Sort by dates or sort by scores'></bool-setting>
 </settings-container>

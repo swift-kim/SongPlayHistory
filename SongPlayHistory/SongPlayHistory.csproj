@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="0Harmony.1.2.0.1">
+      <HintPath>References\Libs\0Harmony.1.2.0.1.dll</HintPath>
+    </Reference>
     <Reference Include="BSML">
       <HintPath>References\Plugins\BSML.dll</HintPath>
     </Reference>
@@ -93,6 +96,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HarmonyPatches\LevelListTableCellOverride.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PluginConfig.cs" />
@@ -109,7 +113,9 @@
     <None Include=".gitignore" />
     <EmbeddedResource Include="Views\Settings.bsml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\ThumbUp.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--Build Targets-->
   <Target Name="CopyToPlugins" AfterTargets="Build" Condition="'$(NCrunch)' != '1'">
