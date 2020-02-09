@@ -1,11 +1,11 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
   "author": "peperoro",
-  "description": "Track your scores",
+  "description": "Track all your scores",
   "gameVersion": "1.6.1",
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "dependsOn": 
   {
     "BeatSaberMarkupLanguage": "^1.1.2"
