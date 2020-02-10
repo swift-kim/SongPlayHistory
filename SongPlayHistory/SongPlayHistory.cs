@@ -282,6 +282,9 @@ namespace SongPlayHistory
             }
 
             Refresh();
+
+            // The user may have voted on this song.
+            HarmonyPatches.LevelListTableCellOverride.CheckUpdate();
         }
     }
 }

@@ -98,14 +98,14 @@ namespace SongPlayHistory
         {
             try
             {
-                if (enabled)
+                if (enabled && !Harmony.HasAnyPatches(HarmonyId))
                 {
-                    Logger.Log.Debug("Applying Harmony patches...");
+                    Logger.Log.Debug("Applying Harmony patch...");
                     Harmony.PatchAll(Assembly.GetExecutingAssembly());
                 }
-                else
+                else if (!enabled && Harmony.HasAnyPatches(HarmonyId))
                 {
-                    Logger.Log.Debug("Removing Harmony patches...");
+                    Logger.Log.Debug("Removing Harmony patch...");
                     Harmony.UnpatchAll(HarmonyId);
                 }
             }
