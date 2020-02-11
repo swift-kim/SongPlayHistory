@@ -54,7 +54,7 @@ namespace SongPlayHistory
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log?.Debug(ex);
+                    Logger.Log.Error(ex);
                 }
             });
         }
@@ -133,13 +133,13 @@ namespace SongPlayHistory
             resultsViewController.restartButtonPressedEvent -= OnPlayResultDismiss;
             resultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
-            Logger.Log?.Debug($"Finished initializing {name}.");
+            Logger.Log.Debug("Initialization complete.");
             _isInitialized = true;
         }
 
         internal void Refresh()
         {
-            Logger.Log?.Debug("Refreshing...");
+            Logger.Log.Debug("Refreshing...");
 
             var beatmap = _levelDetailViewController?.selectedDifficultyBeatmap;
             if (beatmap == null)
@@ -148,19 +148,14 @@ namespace SongPlayHistory
             // _hoverHint cannot be null here.
             _hoverHint.text = "No record";
 
-            var config = Plugin.Config?.Value;
-            if (config == null)
-            {
-                Logger.Log?.Warn($"The config provider is not initialized.");
-                return;
-            }
-
-            // Load records for the currently selected song.
+            var config = Plugin.Config.Value;
             var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
             var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
+
+            // Load records from the plugin config.
             if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
             {
-                // Note: Max lines = 9
+                // Note: HoverHint max lines = 9
                 var orderedList = scoreList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
                 if (orderedList.Count() > 0)
                 {
@@ -203,16 +198,13 @@ namespace SongPlayHistory
                 var playCountValue = _playCountRect.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
                 playCountValue.SetText("-");
 
-                // Read play counts for the selected song from PlayerDataModelSO.
-                var playerDataModel = _levelDetailViewController?.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
-                if (playerDataModel?.playerData == null)
-                    return;
-
+                // Read play counts from PlayerDataModelSO.
+                var playerDataModel = _levelDetailViewController.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
                 var statsList = playerDataModel.playerData.levelsStatsData;
                 var stat = statsList?.FirstOrDefault(x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
                 if (stat == null)
                 {
-                    Logger.Log?.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
+                    Logger.Log.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
                 }
                 else
                 {
@@ -257,28 +249,21 @@ namespace SongPlayHistory
 
                 var beatmapCharacteristicName = lastBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
                 var difficulty = $"{lastBeatmap.level.levelID}___{(int)lastBeatmap.difficulty}___{beatmapCharacteristicName}";
-                var score = new Score
+                var newScore = new Score
                 {
                     Date = unixDateTime,
                     ModifiedScore = lastResult.modifiedScore,
                     RawScore = lastResult.rawScore,
                 };
 
-                var config = Plugin.Config?.Value;
-                if (config == null || Plugin.ConfigProvider == null)
+                var config = Plugin.Config.Value;
+                if (!config.Scores.ContainsKey(difficulty))
                 {
-                    Logger.Log?.Warn($"The config provider is not initialized. Unable to save scores.");
+                    config.Scores.Add(difficulty, new List<Score>());
                 }
-                else
-                {
-                    if (!config.Scores.ContainsKey(difficulty))
-                    {
-                        config.Scores.Add(difficulty, new List<Score>());
-                    }
-                    config.Scores[difficulty].Add(score);
+                config.Scores[difficulty].Add(newScore);
 
-                    Plugin.ConfigProvider.Store(config);
-                }
+                Plugin.ConfigProvider.Store(config);
             }
 
             Refresh();

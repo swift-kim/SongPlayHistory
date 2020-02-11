@@ -32,13 +32,19 @@ namespace SongPlayHistory.HarmonyPatches
 
         public static void CheckUpdate()
         {
+            if (!File.Exists(_voteFile))
+            {
+                Logger.Log.Debug($"The file {Path.GetFileName(_voteFile)} doesn't exist.");
+                return;
+            }
+
             try
             {
-                Logger.Log.Debug("Checking for changes in votedSongs.json...");
-
                 if (_lastWritten != File.GetLastWriteTime(_voteFile))
                 {
                     _lastWritten = File.GetLastWriteTime(_voteFile);
+
+                    Logger.Log.Debug($"Checking for changes in {Path.GetFileName(_voteFile)}...");
 
                     var text = File.ReadAllText(_voteFile);
                     _voteData = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text);

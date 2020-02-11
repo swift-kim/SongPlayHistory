@@ -5,6 +5,7 @@ using IPA;
 using IPA.Config;
 using IPA.Utilities;
 using System;
+using System.IO;
 using System.Reflection;
 using UnityEngine.SceneManagement;
 
@@ -18,6 +19,9 @@ namespace SongPlayHistory
         internal static IConfigProvider ConfigProvider;
         internal static Ref<PluginConfig> Config;
         internal static HarmonyInstance Harmony;
+
+        private readonly string _configFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.json");
+        private readonly string _backupFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.bak");
 
         public void Init(IPA.Logging.Logger logger, [IPA.Config.Config.Prefer("json")] IConfigProvider configProvider)
         {
@@ -38,7 +42,7 @@ namespace SongPlayHistory
 
         public void OnApplicationStart()
         {
-            Logger.Log?.Debug("OnApplicationStart");
+            Logger.Log.Debug("OnApplicationStart");
 
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuLoadedFresh;
@@ -50,12 +54,40 @@ namespace SongPlayHistory
         {
             BSMLSettings.instance.AddSettingsMenu("Song Play History", $"{Name}.Views.Settings.bsml", SettingsController.instance);
 
+            // Any JSON field added/removed between releases will be handled by this.
             ConfigProvider.Store(Config.Value);
+
             SongPlayHistory.OnLoad();
         }
 
         public void OnApplicationQuit()
         {
+            if (!File.Exists(_configFile))
+                return; // We have nothing to do.
+
+            try
+            {
+                if (File.Exists(_backupFile))
+                {
+                    // Compare file sizes instead of the last write time.
+                    if (new FileInfo(_configFile).Length > new FileInfo(_backupFile).Length)
+                    {
+                        File.Copy(_configFile, _backupFile, true);
+                    }
+                    else
+                    {
+                        Logger.Log.Info("Did not overwrite the existing file.");
+                    }
+                }
+                else
+                {
+                    File.Copy(_configFile, _backupFile);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.Error(ex.ToString());
+            }
         }
 
         /// <summary>
