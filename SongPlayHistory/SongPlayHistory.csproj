@@ -34,19 +34,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony.1.2.0.1">
-      <HintPath>References\Libs\0Harmony.1.2.0.1.dll</HintPath>
-    </Reference>
-    <Reference Include="BSML">
-      <HintPath>References\Plugins\BSML.dll</HintPath>
-    </Reference>
-    <Reference Include="BS_Utils">
-      <HintPath>References\Plugins\BS_Utils.dll</HintPath>
-    </Reference>
-    <Reference Include="HMLib">
-      <HintPath>References\Beat Saber_Data\Managed\HMLib.dll</HintPath>
+      <HintPath>$(BeatSaberDir)\Libs\0Harmony.1.2.0.1.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json.12.0.0.0">
-      <HintPath>References\IPA\Libs\Newtonsoft.Json.12.0.0.0.dll</HintPath>
+      <HintPath>$(BeatSaberDir)\Libs\Newtonsoft.Json.12.0.0.0.dll</HintPath>
+    </Reference>
+    <Reference Include="BSML">
+      <HintPath>$(BeatSaberDir)\Plugins\BSML.dll</HintPath>
+    </Reference>
+    <Reference Include="BS_Utils">
+      <HintPath>$(BeatSaberDir)\Plugins\BS_Utils.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -61,6 +58,9 @@
     <Reference Include="HMUI">
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\HMUI.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="HMLib">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\HMLib.dll</HintPath>
     </Reference>
     <Reference Include="IPA.Loader">
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
@@ -77,6 +77,9 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
@@ -106,15 +109,12 @@
     <Compile Include="SettingsController.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="manifest.json" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="CreateJunctions.bat" />
     <None Include=".gitignore" />
+    <EmbeddedResource Include="manifest.json" />
+    <EmbeddedResource Include="Assets\ThumbsUp.png" />
+    <EmbeddedResource Include="Assets\ThumbsDown.png" />
     <EmbeddedResource Include="Views\Settings.bsml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\ThumbUp.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--Build Targets-->
