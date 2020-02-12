@@ -54,7 +54,7 @@ namespace SongPlayHistory
         {
             BSMLSettings.instance.AddSettingsMenu("Song Play History", $"{Name}.Views.Settings.bsml", SettingsController.instance);
 
-            // Any JSON field added/removed between releases will be handled by this.
+            // If there was an update in the config data structure between releases, it is handled here.
             ConfigProvider.Store(Config.Value);
 
             SongPlayHistory.OnLoad();
