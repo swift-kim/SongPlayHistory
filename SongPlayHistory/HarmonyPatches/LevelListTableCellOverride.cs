@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Harmony;
 using Newtonsoft.Json;
 using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace SongPlayHistory.HarmonyPatches
@@ -22,6 +24,26 @@ namespace SongPlayHistory.HarmonyPatches
         {
             public string key = null;
             public string voteType = null;
+        }
+
+        /// <summary>
+        /// Called before applying this Harmony patch.
+        /// </summary>
+        public static bool Prepare()
+        {
+            if (_thumbsUp == null)
+            {
+                _thumbsUp = new GameObject("ThumbsUp").AddComponent<Image>();
+                _thumbsUp.sprite = LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsUp.png");
+                _thumbsUp.color = Color.white;
+                _thumbsUp.enabled = false;
+
+                _thumbsDown = new GameObject("ThumbsDown").AddComponent<Image>();
+                _thumbsDown.sprite = LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsDown.png");
+                _thumbsDown.color = Color.white;
+                _thumbsDown.enabled = false;
+            }
+            return UpdateData();
         }
 
         public static bool UpdateData()
@@ -55,14 +77,6 @@ namespace SongPlayHistory.HarmonyPatches
         }
 
         /// <summary>
-        /// Called before applying this Harmony patch.
-        /// </summary>
-        public static bool Prepare()
-        {
-            return UpdateData();
-        }
-
-        /// <summary>
         /// Called after drawing a LevelListTableCell.
         /// </summary>
         [HarmonyAfter(new string[] { "com.kyle1413.BeatSaber.SongCore" })]
@@ -79,18 +93,32 @@ namespace SongPlayHistory.HarmonyPatches
 
             if (_voteData.TryGetValue(levelID, out UserVote vote))
             {
-                if (vote.voteType == "Upvote")
-                {
-                    ____authorText.SetText($"👍👍👍 { ____authorText.text}");
-                }
-                else
-                {
-                    ____authorText.SetText($"{ ____authorText.text} 👎👎👎");
-                }
+                Image icon = null;
             }
 
-            // TODO: Image
+            // TODO: Icons not always white - see RefreshVisuals()
             // TODO: Not refreshed after finishing a song
+        }
+
+        private static Sprite LoadSpriteFromResource(string resourcePath)
+        {
+            try
+            {
+                var stream = Assembly.GetCallingAssembly().GetManifestResourceStream(resourcePath);
+                var resource = new byte[stream.Length];
+                stream.Read(resource, 0, (int)stream.Length);
+
+                var texture = new Texture2D(2, 2);
+                texture.LoadImage(resource, false);
+
+                var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+                return sprite;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log.Error("Error while loading a Sprite from resource.\n" + ex.ToString());
+                return null;
+            }
         }
     }
 }
