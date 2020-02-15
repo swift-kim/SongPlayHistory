@@ -48,14 +48,8 @@ namespace SongPlayHistory
             var soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
             soloFreePlayButton.onClick.AddListener(() =>
             {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log.Error(ex);
-                }
+                // Fail fast when there is an error during initialization.
+                Initialize();
             });
         }
 
@@ -112,10 +106,9 @@ namespace SongPlayHistory
             var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
             var hiddenButton = Instantiate(playButton, _playerStatsContainer.transform);
             (hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 70.0f);
-            foreach (var tf in hiddenButton.GetComponentsInChildren<Transform>())
+            foreach (var t in hiddenButton.GetComponentsInChildren<Transform>().Where(x => new[] { "BG", "GlowContainer", "Stroke", "Text" }.Contains(x.name)))
             {
-                if (new[] { "BG", "GlowContainer", "Stroke", "Text" }.Contains(tf.name))
-                    Destroy(tf.gameObject);
+                Destroy(t.gameObject);
             }
             var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
             var hoverHintHolder = hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();

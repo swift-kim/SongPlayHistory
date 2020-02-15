@@ -17,8 +17,8 @@ namespace SongPlayHistory.HarmonyPatches
         private static string _voteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
         private static DateTime _lastWritten;
         private static Dictionary<string, UserVote> _voteData;
-        private static Image _thumbsUp;
-        private static Image _thumbsDown;
+        private static Sprite _thumbsUp;
+        private static Sprite _thumbsDown;
 
         private class UserVote
         {
@@ -26,23 +26,11 @@ namespace SongPlayHistory.HarmonyPatches
             public string voteType = null;
         }
 
-        /// <summary>
-        /// Called before applying this Harmony patch.
-        /// </summary>
         public static bool Prepare()
         {
-            if (_thumbsUp == null)
-            {
-                _thumbsUp = new GameObject("ThumbsUp").AddComponent<Image>();
-                _thumbsUp.sprite = LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsUp.png");
-                _thumbsUp.color = Color.white;
-                _thumbsUp.enabled = false;
+            _thumbsUp = _thumbsUp ?? LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsUp.png");
+            _thumbsDown = _thumbsDown ?? LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsDown.png");
 
-                _thumbsDown = new GameObject("ThumbsDown").AddComponent<Image>();
-                _thumbsDown.sprite = LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsDown.png");
-                _thumbsDown.color = Color.white;
-                _thumbsDown.enabled = false;
-            }
             return UpdateData();
         }
 
@@ -55,7 +43,6 @@ namespace SongPlayHistory.HarmonyPatches
                 Logger.Log.Warn($"The file doesn't exist.");
                 return false;
             }
-
             try
             {
                 if (_lastWritten != File.GetLastWriteTime(_voteFile))
@@ -69,31 +56,64 @@ namespace SongPlayHistory.HarmonyPatches
                 }
                 return true;
             }
-            catch (Exception ex) // IOException or JsonException
+            catch (Exception ex) // IOException, JsonException
             {
                 Logger.Log.Error(ex.ToString());
                 return false;
             }
         }
 
-        /// <summary>
-        /// Called after drawing a LevelListTableCell.
-        /// </summary>
         [HarmonyAfter(new string[] { "com.kyle1413.BeatSaber.SongCore" })]
-        public static void Postfix(LevelListTableCell __instance, IPreviewBeatmapLevel level, bool isFavorite, ref TextMeshProUGUI ____songNameText,
-            ref TextMeshProUGUI ____authorText)
+        public static void Postfix(LevelListTableCell __instance, IPreviewBeatmapLevel level,
+            TextMeshProUGUI ____songNameText,
+            TextMeshProUGUI ____authorText,
+            Image[] ____beatmapCharacteristicImages)
         {
+            // For performance reason, avoid using Linq.
+            Image voteIcon = null;
+            foreach (var i in __instance.GetComponentsInChildren<Image>())
+            {
+                if (i.name == "Vote")
+                {
+                    voteIcon = i;
+                    break;
+                }
+            }
+            if (voteIcon == null)
+            {
+                voteIcon = UnityEngine.Object.Instantiate(____beatmapCharacteristicImages[0], __instance.transform);
+                voteIcon.name = "Vote";
+                voteIcon.color = new Color(1f, 1f, 1f, 0.75f); // Color.white;
+            }
+            voteIcon.enabled = false;
+
             if (_voteData == null)
                 return;
 
-            if (!level.levelID.StartsWith("custom_level_"))
-                return;
-
-            var levelID = level.levelID.Replace("custom_level_", "").ToLower();
-
-            if (_voteData.TryGetValue(levelID, out UserVote vote))
+            if (_voteData.TryGetValue(level.levelID.Replace("custom_level_", "").ToLower(), out UserVote vote))
             {
-                Image icon = null;
+                float num = -1f; // ____songNameText.rectTransform.offsetMax.x;
+
+                foreach (var i in ____beatmapCharacteristicImages)
+                {
+                    if (i.enabled && i.rectTransform.anchoredPosition.x < num)
+                    {
+                        num -= i.rectTransform.sizeDelta.x + 0.5f;
+                    }
+                }
+                num -= 5f; // icon.rectTransform.sizeDelta.x;
+
+                voteIcon.enabled = true;
+                voteIcon.sprite = vote.voteType == "Upvote" ? _thumbsUp : _thumbsDown;
+                voteIcon.rectTransform.anchoredPosition = new Vector2(num, 0f);
+
+                Logger.Log.Debug($"num={num}");
+
+                ____songNameText.rectTransform.offsetMax = new Vector2(num, ____songNameText.rectTransform.offsetMax.y);
+                ____authorText.rectTransform.offsetMax = new Vector2(num, ____authorText.rectTransform.offsetMax.y);
+
+                ____songNameText.ForceMeshUpdate();
+                ____authorText.ForceMeshUpdate();
             }
 
             // TODO: Icons not always white - see RefreshVisuals()
@@ -116,7 +136,7 @@ namespace SongPlayHistory.HarmonyPatches
             }
             catch (Exception ex)
             {
-                Logger.Log.Error("Error while loading a Sprite from resource.\n" + ex.ToString());
+                Logger.Log.Error("Error while loading a resource.\n" + ex.ToString());
                 return null;
             }
         }

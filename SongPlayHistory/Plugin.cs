@@ -54,7 +54,7 @@ namespace SongPlayHistory
         {
             BSMLSettings.instance.AddSettingsMenu("Song Play History", $"{Name}.Views.Settings.bsml", SettingsController.instance);
 
-            // If there was an update in the config data structure between releases, it is handled here.
+            // If there is a data structure change between releases, it will be handled here.
             ConfigProvider.Store(Config.Value);
 
             SongPlayHistory.OnLoad();
@@ -63,7 +63,7 @@ namespace SongPlayHistory
         public void OnApplicationQuit()
         {
             if (!File.Exists(_configFile))
-                return; // We have nothing to do.
+                return;
 
             try
             {
@@ -84,7 +84,7 @@ namespace SongPlayHistory
                     File.Copy(_configFile, _backupFile);
                 }
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
                 Logger.Log.Error(ex.ToString());
             }
@@ -143,7 +143,7 @@ namespace SongPlayHistory
             }
             catch (Exception ex)
             {
-                Logger.Log.Error(ex.ToString());
+                Logger.Log.Error("Error while applying Harmony patch.\n" + ex.ToString());
             }
         }
     }
