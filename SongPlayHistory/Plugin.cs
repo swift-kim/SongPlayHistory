@@ -132,18 +132,18 @@ namespace SongPlayHistory
             {
                 if (enabled && !Harmony.HasAnyPatches(HarmonyId))
                 {
-                    Logger.Log.Debug("Applying Harmony patch...");
+                    Logger.Log.Debug("Applying Harmony patches...");
                     Harmony.PatchAll(Assembly.GetExecutingAssembly());
                 }
                 else if (!enabled && Harmony.HasAnyPatches(HarmonyId))
                 {
-                    Logger.Log.Debug("Removing Harmony patch...");
+                    Logger.Log.Debug("Removing Harmony patches...");
                     Harmony.UnpatchAll(HarmonyId);
                 }
             }
             catch (Exception ex)
             {
-                Logger.Log.Error("Error while applying Harmony patch.\n" + ex.ToString());
+                Logger.Log.Error("Error while applying Harmony patches.\n" + ex.ToString());
             }
         }
     }

@@ -15,6 +15,7 @@ namespace SongPlayHistory
         public static SongPlayHistory Instance;
 
         private bool _isInitialized = false;
+        private LevelCollectionTableView _levelCollectionTableView;
         private StandardLevelDetailViewController _levelDetailViewController;
         private GameObject _playerStatsContainer;
         private HoverHint _hoverHint;
@@ -98,6 +99,8 @@ namespace SongPlayHistory
             var flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             var resultsViewController = flowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
             var levelSelectionNavController = flowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
+            var levelCollectionViewController = levelSelectionNavController.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
+            _levelCollectionTableView = levelCollectionViewController.GetPrivateField<LevelCollectionTableView>("_levelCollectionTableView");
             _levelDetailViewController = levelSelectionNavController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
             var standardLevelDetailView = _levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
             _playerStatsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
@@ -215,6 +218,9 @@ namespace SongPlayHistory
                 highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 23.4f, 23.3f);
                 maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 46.7f, 23.3f);
             }
+
+            var levelCollection = _levelCollectionTableView.GetPrivateField<TableView>("_tableView");
+            levelCollection.ReloadData();
         }
 
         private void OnDidChangeDifficultyBeatmap(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
@@ -259,10 +265,10 @@ namespace SongPlayHistory
                 Plugin.ConfigProvider.Store(config);
             }
 
-            Refresh();
-
             // The user may have voted on this song.
-            HarmonyPatches.LevelListTableCellOverride.UpdateData();
+            HarmonyPatches.LevelListTableCell_SetDataFromLevel.UpdateData();
+
+            Refresh();
         }
     }
 }

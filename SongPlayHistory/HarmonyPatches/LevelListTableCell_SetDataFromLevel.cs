@@ -12,7 +12,7 @@ namespace SongPlayHistory.HarmonyPatches
 {
     [HarmonyPatch(typeof(LevelListTableCell))]
     [HarmonyPatch("SetDataFromLevelAsync", new Type[] { typeof(IPreviewBeatmapLevel), typeof(bool) })]
-    internal class LevelListTableCellOverride
+    internal class LevelListTableCell_SetDataFromLevel
     {
         private static string _voteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
         private static DateTime _lastWritten;
@@ -36,11 +36,11 @@ namespace SongPlayHistory.HarmonyPatches
 
         public static bool UpdateData()
         {
-            Logger.Log.Debug($"Checking for updates in {Path.GetFileName(_voteFile)}...");
+            Logger.Log.Debug($"Looking for changes in {Path.GetFileName(_voteFile)}...");
 
             if (!File.Exists(_voteFile))
             {
-                Logger.Log.Warn($"The file doesn't exist.");
+                Logger.Log.Warn("The file doesn't exist.");
                 return false;
             }
             try
@@ -52,8 +52,9 @@ namespace SongPlayHistory.HarmonyPatches
                     var text = File.ReadAllText(_voteFile);
                     _voteData = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text);
 
-                    Logger.Log.Debug($"Update done.");
+                    Logger.Log.Debug("Update done.");
                 }
+
                 return true;
             }
             catch (Exception ex) // IOException, JsonException
@@ -63,19 +64,22 @@ namespace SongPlayHistory.HarmonyPatches
             }
         }
 
-        [HarmonyAfter(new string[] { "com.kyle1413.BeatSaber.SongCore" })]
-        public static void Postfix(LevelListTableCell __instance, IPreviewBeatmapLevel level,
-            TextMeshProUGUI ____songNameText,
-            TextMeshProUGUI ____authorText,
-            Image[] ____beatmapCharacteristicImages)
+        public static void Prefix(LevelListTableCell __instance, IPreviewBeatmapLevel level, bool isFavorite,
+            string ____settingDataFromLevelId,
+            Image[] ____beatmapCharacteristicImages,
+            BeatmapCharacteristicSO[] ____beatmapCharacteristics)
         {
-            // For performance reason, avoid using Linq.
+            Logger.Log.Debug($"Prefix ____settingDataFromLevelId={____settingDataFromLevelId} level.levelID={level.levelID} ({____settingDataFromLevelId== level.levelID})");
+            if (____settingDataFromLevelId == level.levelID || _voteData == null)
+                return;
+
             Image voteIcon = null;
-            foreach (var i in __instance.GetComponentsInChildren<Image>())
+            foreach (var image in __instance.GetComponentsInChildren<Image>())
             {
-                if (i.name == "Vote")
+                // For performance reason, avoid using Linq.
+                if (image.name == "Vote")
                 {
-                    voteIcon = i;
+                    voteIcon = image;
                     break;
                 }
             }
@@ -83,41 +87,42 @@ namespace SongPlayHistory.HarmonyPatches
             {
                 voteIcon = UnityEngine.Object.Instantiate(____beatmapCharacteristicImages[0], __instance.transform);
                 voteIcon.name = "Vote";
-                voteIcon.color = new Color(1f, 1f, 1f, 0.75f); // Color.white;
+                voteIcon.color = new Color(1f, 1f, 1f, 0.5f);
             }
             voteIcon.enabled = false;
 
-            if (_voteData == null)
-                return;
-
             if (_voteData.TryGetValue(level.levelID.Replace("custom_level_", "").ToLower(), out UserVote vote))
             {
-                float num = -1f; // ____songNameText.rectTransform.offsetMax.x;
+                float pos = -1f;
 
-                foreach (var i in ____beatmapCharacteristicImages)
+                foreach (var d in level.previewDifficultyBeatmapSets)
                 {
-                    if (i.enabled && i.rectTransform.anchoredPosition.x < num)
+                    if (Array.IndexOf(____beatmapCharacteristics, d.beatmapCharacteristic) >= 0)
                     {
-                        num -= i.rectTransform.sizeDelta.x + 0.5f;
+                        pos -= 4f;
                     }
                 }
-                num -= 5f; // icon.rectTransform.sizeDelta.x;
 
                 voteIcon.enabled = true;
                 voteIcon.sprite = vote.voteType == "Upvote" ? _thumbsUp : _thumbsDown;
-                voteIcon.rectTransform.anchoredPosition = new Vector2(num, 0f);
-
-                Logger.Log.Debug($"num={num}");
-
-                ____songNameText.rectTransform.offsetMax = new Vector2(num, ____songNameText.rectTransform.offsetMax.y);
-                ____authorText.rectTransform.offsetMax = new Vector2(num, ____authorText.rectTransform.offsetMax.y);
-
-                ____songNameText.ForceMeshUpdate();
-                ____authorText.ForceMeshUpdate();
+                voteIcon.rectTransform.anchoredPosition = new Vector2(pos, 0f);
             }
+        }
 
-            // TODO: Icons not always white - see RefreshVisuals()
-            // TODO: Not refreshed after finishing a song
+        [HarmonyAfter(new string[] { "com.kyle1413.BeatSaber.SongCore" })]
+        public static void Postfix(LevelListTableCell __instance, IPreviewBeatmapLevel level, bool isFavorite,
+            string ____settingDataFromLevelId,
+            TextMeshProUGUI ____songNameText,
+            TextMeshProUGUI ____authorText)
+        {
+            Logger.Log.Debug($"Postfix ____settingDataFromLevelId={____settingDataFromLevelId} level.levelID={level.levelID} ({____settingDataFromLevelId == level.levelID})");
+            if (_voteData.ContainsKey(level.levelID.Replace("custom_level_", "").ToLower()))
+            {
+                ____songNameText.rectTransform.offsetMax -= new Vector2(3.5f, 0);
+                ____songNameText.SetText(____songNameText.text); // FIXME: Any better way to refresh?
+                ____authorText.rectTransform.offsetMax -= new Vector2(3.5f, 0);
+                ____authorText.SetText(____songNameText.text);
+            }
         }
 
         private static Sprite LoadSpriteFromResource(string resourcePath)
@@ -129,7 +134,7 @@ namespace SongPlayHistory.HarmonyPatches
                 stream.Read(resource, 0, (int)stream.Length);
 
                 var texture = new Texture2D(2, 2);
-                texture.LoadImage(resource, false);
+                texture.LoadImage(resource);
 
                 var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
                 return sprite;

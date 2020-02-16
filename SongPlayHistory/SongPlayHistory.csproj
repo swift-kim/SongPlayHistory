@@ -99,7 +99,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HarmonyPatches\LevelListTableCellOverride.cs" />
+    <Compile Include="HarmonyPatches\LevelListTableCell_RefreshVisuals.cs" />
+    <Compile Include="HarmonyPatches\LevelListTableCell_SetDataFromLevel.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PluginConfig.cs" />
