@@ -64,15 +64,13 @@ namespace SongPlayHistory.HarmonyPatches
             }
         }
 
-        public static void Prefix(LevelListTableCell __instance, IPreviewBeatmapLevel level, bool isFavorite,
-            string ____settingDataFromLevelId,
+        [HarmonyAfter(new string[] { "com.kyle1413.BeatSaber.SongCore" })]
+        public static void Postfix(LevelListTableCell __instance, IPreviewBeatmapLevel level, bool isFavorite,
             Image[] ____beatmapCharacteristicImages,
-            BeatmapCharacteristicSO[] ____beatmapCharacteristics)
+            BeatmapCharacteristicSO[] ____beatmapCharacteristics,
+            TextMeshProUGUI ____songNameText,
+            TextMeshProUGUI ____authorText)
         {
-            Logger.Log.Debug($"Prefix ____settingDataFromLevelId={____settingDataFromLevelId} level.levelID={level.levelID} ({____settingDataFromLevelId== level.levelID})");
-            if (____settingDataFromLevelId == level.levelID || _voteData == null)
-                return;
-
             Image voteIcon = null;
             foreach (var image in __instance.GetComponentsInChildren<Image>())
             {
@@ -91,10 +89,12 @@ namespace SongPlayHistory.HarmonyPatches
             }
             voteIcon.enabled = false;
 
+            if (_voteData == null)
+                return;
+
             if (_voteData.TryGetValue(level.levelID.Replace("custom_level_", "").ToLower(), out UserVote vote))
             {
                 float pos = -1f;
-
                 foreach (var d in level.previewDifficultyBeatmapSets)
                 {
                     if (Array.IndexOf(____beatmapCharacteristics, d.beatmapCharacteristic) >= 0)
@@ -102,24 +102,12 @@ namespace SongPlayHistory.HarmonyPatches
                         pos -= 4f;
                     }
                 }
-
                 voteIcon.enabled = true;
                 voteIcon.sprite = vote.voteType == "Upvote" ? _thumbsUp : _thumbsDown;
                 voteIcon.rectTransform.anchoredPosition = new Vector2(pos, 0f);
-            }
-        }
 
-        [HarmonyAfter(new string[] { "com.kyle1413.BeatSaber.SongCore" })]
-        public static void Postfix(LevelListTableCell __instance, IPreviewBeatmapLevel level, bool isFavorite,
-            string ____settingDataFromLevelId,
-            TextMeshProUGUI ____songNameText,
-            TextMeshProUGUI ____authorText)
-        {
-            Logger.Log.Debug($"Postfix ____settingDataFromLevelId={____settingDataFromLevelId} level.levelID={level.levelID} ({____settingDataFromLevelId == level.levelID})");
-            if (_voteData.ContainsKey(level.levelID.Replace("custom_level_", "").ToLower()))
-            {
                 ____songNameText.rectTransform.offsetMax -= new Vector2(3.5f, 0);
-                ____songNameText.SetText(____songNameText.text); // FIXME: Any better way to refresh?
+                ____songNameText.SetText(____songNameText.text);
                 ____authorText.rectTransform.offsetMax -= new Vector2(3.5f, 0);
                 ____authorText.SetText(____songNameText.text);
             }
