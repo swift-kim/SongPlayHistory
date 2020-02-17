@@ -1,21 +1,19 @@
 ﻿using BS_Utils.Utilities;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace SongPlayHistory
 {
-    public class SongPlayHistory : MonoBehaviour
+    public class SPHController : MonoBehaviour
     {
-        public static SongPlayHistory Instance;
-        private SongPlayHistoryUI _ui;
+        public static SPHController Instance;
+        private SPHUI _ui;
 
         internal static void OnLoad()
         {
             if (Instance != null)
                 return;
 
-            _ = new GameObject(nameof(SongPlayHistory)).AddComponent<SongPlayHistory>();
+            _ = new GameObject(nameof(SPHController)).AddComponent<SPHController>();
         }
 
         #region Monobehaviour Messages
@@ -35,6 +33,7 @@ namespace SongPlayHistory
         /// </summary>
         private void Start()
         {
+            BeatSaber.Initialize();
             BeatSaber.SoloFreePlayButton.onClick.AddListener(() =>
             {
                 // Fail fast when there's any error during initialization.
@@ -80,10 +79,13 @@ namespace SongPlayHistory
 
         private void Initialize()
         {
+            // TODO: Intiailize a bit earlier?
+            // TODO: Broken when re-initializing.
+
             if (_ui != null)
                 return;
 
-            _ui = new SongPlayHistoryUI();
+            _ui = new SPHUI();
 
             // Install event handlers.
             BeatSaber.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
@@ -108,7 +110,9 @@ namespace SongPlayHistory
             if (contentType != StandardLevelDetailViewController.ContentType.Loading)
             {
                 Refresh();
-                BeatSaber.RefreshSongList();
+
+                // Make sure the song list is invalidated.
+                BeatSaber.ReloadSongList();
             }
         }
 
@@ -120,29 +124,29 @@ namespace SongPlayHistory
             // Do not save failed records.
             if (lastResult.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
             {
-                SongPlayHistoryModel.SaveRecord(lastBeatmap, lastResult);
+                SPHModel.SaveRecord(lastBeatmap, lastResult);
             }
 
-            // The user may have voted on this song.
-            HarmonyPatches.LevelListTableCell_SetDataFromLevel.UpdateData();
-
             Refresh();
-            BeatSaber.RefreshSongList();
+
+            // The user may have voted on this song.
+            SPHModel.UpdateVoteData();
+            BeatSaber.ReloadSongList();
         }
 
         internal void Refresh()
         {
-            Logger.Log.Debug("Refreshing...");
+            Logger.Log.Debug("Refreshing data...");
 
             var beatmap = BeatSaber.LevelDetailViewController.selectedDifficultyBeatmap;
             if (beatmap == null)
                 return;
 
-            _ui.SetHoverText(SongPlayHistoryModel.GetRecords(beatmap));
+            _ui.SetHoverText(SPHModel.GetRecords(beatmap));
 
             if (Plugin.Config.Value.ShowPlayCounts)
             {
-                _ui.ShowPlayCount(SongPlayHistoryModel.GetPlayCount(beatmap));
+                _ui.ShowPlayCount(SPHModel.GetPlayCount(beatmap));
             }
             else
             {

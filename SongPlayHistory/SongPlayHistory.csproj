@@ -106,11 +106,11 @@
     <Compile Include="Logger.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="Score.cs" />
-    <Compile Include="SongPlayHistory.cs" />
+    <Compile Include="SPHController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingsController.cs" />
-    <Compile Include="SongPlayHistoryModel.cs" />
-    <Compile Include="SongPlayHistoryUI.cs" />
+    <Compile Include="SPHModel.cs" />
+    <Compile Include="SPHUI.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CreateJunctions.bat" />

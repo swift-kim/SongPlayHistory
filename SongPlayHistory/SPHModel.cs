@@ -1,13 +1,20 @@
 ﻿using BS_Utils.Utilities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace SongPlayHistory
 {
-    internal static class SongPlayHistoryModel
+    internal static class SPHModel
     {
+        private static readonly string _voteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
+        private static DateTime _voteLastWritten;
+
+        public static Dictionary<string, UserVote> VoteData;
+
         public static string GetRecords(IDifficultyBeatmap beatmap)
         {
             var config = Plugin.Config.Value;
@@ -57,6 +64,7 @@ namespace SongPlayHistory
             config.Scores[difficulty].Add(newScore);
 
             Plugin.ConfigProvider.Store(config);
+            Logger.Log.Debug($"Saved a new record {difficulty} ({record.modifiedScore}).");
         }
 
         public static int GetPlayCount(IDifficultyBeatmap beatmap)
@@ -70,6 +78,42 @@ namespace SongPlayHistory
                 return -1;
             }
             return stat.playCount;
+        }
+
+        public static bool UpdateVoteData()
+        {
+            Logger.Log.Debug($"Looking for changes in {Path.GetFileName(_voteFile)}...");
+
+            if (!File.Exists(_voteFile))
+            {
+                Logger.Log.Warn("The file doesn't exist.");
+                return false;
+            }
+            try
+            {
+                if (_voteLastWritten != File.GetLastWriteTime(_voteFile))
+                {
+                    _voteLastWritten = File.GetLastWriteTime(_voteFile);
+
+                    var text = File.ReadAllText(_voteFile);
+                    VoteData = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text);
+
+                    Logger.Log.Debug("Update done.");
+                }
+
+                return true;
+            }
+            catch (Exception ex) // IOException, JsonException
+            {
+                Logger.Log.Error(ex.ToString());
+                return false;
+            }
+        }
+
+        public class UserVote
+        {
+            public string key = null;
+            public string voteType = null;
         }
     }
 }

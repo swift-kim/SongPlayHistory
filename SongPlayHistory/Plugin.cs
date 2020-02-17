@@ -57,7 +57,7 @@ namespace SongPlayHistory
             // If there is a data structure change between releases, it will be handled here.
             ConfigProvider.Store(Config.Value);
 
-            SongPlayHistory.OnLoad();
+            SPHController.OnLoad();
         }
 
         public void OnApplicationQuit()

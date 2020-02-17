@@ -14,7 +14,7 @@ namespace SongPlayHistory
         public static StandardLevelDetailViewController LevelDetailViewController;
         public static GameObject PlayerStatsContainer;
 
-        static BeatSaber()
+        public static void Initialize()
         {
             // For now, we are sure these values never change after being initialized.
             SoloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
@@ -28,7 +28,7 @@ namespace SongPlayHistory
             PlayerStatsContainer = standardLevelDetailView.GetPrivateField<GameObject>("_playerStatsContainer");
         }
 
-        public static void RefreshSongList()
+        public static void ReloadSongList()
         {
             var levelCollection = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
             levelCollection.ReloadData();

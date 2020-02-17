@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace SongPlayHistory
 {
-    internal class SongPlayHistoryUI
+    internal class SPHUI
     {
         private HoverHint _hoverHint;
         private RectTransform _maxCombo;
@@ -15,7 +15,7 @@ namespace SongPlayHistory
         private RectTransform _maxRank;
         private RectTransform _playCount;
 
-        public SongPlayHistoryUI()
+        public SPHUI()
         {
             var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
             var hiddenButton = Object.Instantiate(playButton, BeatSaber.PlayerStatsContainer.transform);
