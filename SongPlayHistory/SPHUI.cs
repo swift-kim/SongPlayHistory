@@ -18,7 +18,7 @@ namespace SongPlayHistory
         public SPHUI()
         {
             var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            var hiddenButton = Object.Instantiate(playButton, BeatSaber.PlayerStatsContainer.transform);
+            var hiddenButton = Object.Instantiate(playButton, BeatSaberUI.PlayerStatsContainer.transform);
             (hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 70.0f);
             foreach (var t in hiddenButton.GetComponentsInChildren<Transform>().Where(x => new[] { "BG", "GlowContainer", "Stroke", "Text" }.Contains(x.name)))
             {
@@ -30,9 +30,9 @@ namespace SongPlayHistory
             _hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
             _hoverHint.text = "History";
 
-            _maxCombo = BeatSaber.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
-            _highscore = BeatSaber.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
-            _maxRank = BeatSaber.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
+            _maxCombo = BeatSaberUI.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
+            _highscore = BeatSaberUI.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
+            _maxRank = BeatSaberUI.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
         }
 
         public void SetHoverText(string text)
@@ -44,7 +44,7 @@ namespace SongPlayHistory
         {
             if (_playCount == null)
             {
-                _playCount = Object.Instantiate(_maxCombo, BeatSaber.PlayerStatsContainer.transform);
+                _playCount = Object.Instantiate(_maxCombo, BeatSaberUI.PlayerStatsContainer.transform);
                 _playCount.name = "PlayCount";
                 var playCountTitle = _playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
                 playCountTitle.SetText("Play Count");

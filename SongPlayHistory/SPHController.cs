@@ -1,5 +1,7 @@
 ﻿using BS_Utils.Utilities;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace SongPlayHistory
 {
@@ -33,10 +35,10 @@ namespace SongPlayHistory
         /// </summary>
         private void Start()
         {
-            BeatSaber.Initialize();
-            BeatSaber.SoloFreePlayButton.onClick.AddListener(() =>
+            var soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
+            soloFreePlayButton.onClick.AddListener(() =>
             {
-                // Fail fast when there's any error during initialization.
+                // Fail fast if there's any error during initialization.
                 Initialize();
             });
         }
@@ -79,23 +81,22 @@ namespace SongPlayHistory
 
         private void Initialize()
         {
-            // TODO: Intiailize a bit earlier?
-            // TODO: Broken when re-initializing.
-
+            // We don't have to re-initialize unless the menu scene is reloaded.
             if (_ui != null)
                 return;
 
+            BeatSaberUI.Initialize();
             _ui = new SPHUI();
 
             // Install event handlers.
-            BeatSaber.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
-            BeatSaber.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
-            BeatSaber.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContent;
-            BeatSaber.LevelDetailViewController.didPresentContentEvent += OnDidPresentContent;
-            BeatSaber.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
-            BeatSaber.ResultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
-            BeatSaber.ResultsViewController.restartButtonPressedEvent -= OnPlayResultDismiss;
-            BeatSaber.ResultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
+            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
+            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
+            BeatSaberUI.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContent;
+            BeatSaberUI.LevelDetailViewController.didPresentContentEvent += OnDidPresentContent;
+            BeatSaberUI.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
+            BeatSaberUI.ResultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
+            BeatSaberUI.ResultsViewController.restartButtonPressedEvent -= OnPlayResultDismiss;
+            BeatSaberUI.ResultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
             Logger.Log.Debug("Initialization complete.");
         }
@@ -112,7 +113,7 @@ namespace SongPlayHistory
                 Refresh();
 
                 // Make sure the song list is invalidated.
-                BeatSaber.ReloadSongList();
+                BeatSaberUI.ReloadSongList();
             }
         }
 
@@ -131,14 +132,14 @@ namespace SongPlayHistory
 
             // The user may have voted on this song.
             SPHModel.UpdateVoteData();
-            BeatSaber.ReloadSongList();
+            BeatSaberUI.ReloadSongList();
         }
 
         internal void Refresh()
         {
             Logger.Log.Debug("Refreshing data...");
 
-            var beatmap = BeatSaber.LevelDetailViewController.selectedDifficultyBeatmap;
+            var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
             if (beatmap == null)
                 return;
 

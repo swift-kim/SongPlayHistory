@@ -2,13 +2,11 @@
 using HMUI;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace SongPlayHistory
 {
-    internal static class BeatSaber
+    internal static class BeatSaberUI
     {
-        public static Button SoloFreePlayButton;
         public static ResultsViewController ResultsViewController;
         public static LevelCollectionTableView LevelCollectionTableView;
         public static StandardLevelDetailViewController LevelDetailViewController;
@@ -16,8 +14,6 @@ namespace SongPlayHistory
 
         public static void Initialize()
         {
-            // For now, we are sure these values never change after being initialized.
-            SoloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
             var soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             ResultsViewController = soloFreePlayFlowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
             var levelSelectionNavController = soloFreePlayFlowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
