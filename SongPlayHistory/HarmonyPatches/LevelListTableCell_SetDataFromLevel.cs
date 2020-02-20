@@ -22,22 +22,6 @@ namespace SongPlayHistory.HarmonyPatches
             return SPHModel.UpdateVoteData();
         }
 
-        public static bool Cleanup()
-        {
-            // TODO: We should clean up voteIcons when removing patches.
-            foreach (var image in Resources.FindObjectsOfTypeAll<Image>())
-            {
-                if (image.name == "Vote")
-                {
-                    UnityEngine.Object.Destroy(image.gameObject);
-                }
-            }
-
-            // TODO: RefreshVisuals has bugs (not shown as selected) in some particular conditions (after installing/uninstalling patches).
-
-            return true;
-        }
-
         [HarmonyAfter(new string[] { "com.kyle1413.BeatSaber.SongCore" })]
         public static void Postfix(LevelListTableCell __instance, IPreviewBeatmapLevel level, bool isFavorite,
             Image[] ____beatmapCharacteristicImages,
@@ -84,6 +68,18 @@ namespace SongPlayHistory.HarmonyPatches
                 ____songNameText.SetText(____songNameText.text); // Force refresh.
                 ____authorText.rectTransform.offsetMax -= new Vector2(3.5f, 0);
                 ____authorText.SetText(____songNameText.text); // Force refresh.
+            }
+        }
+
+        public static void OnUnpatch()
+        {
+            // TableCells are re-used, so manually destroy what we created.
+            foreach (var image in Resources.FindObjectsOfTypeAll<Image>())
+            {
+                if (image.name == "Vote")
+                {
+                    UnityEngine.Object.Destroy(image.gameObject);
+                }
             }
         }
 

@@ -4,6 +4,7 @@ using Harmony;
 using IPA;
 using IPA.Config;
 using IPA.Utilities;
+using SongPlayHistory.HarmonyPatches;
 using System;
 using System.IO;
 using System.Reflection;
@@ -139,6 +140,9 @@ namespace SongPlayHistory
                 {
                     Logger.Log.Debug("Removing Harmony patches...");
                     Harmony.UnpatchAll(HarmonyId);
+
+                    // Do clean-up manually.
+                    LevelListTableCell_SetDataFromLevel.OnUnpatch();
                 }
             }
             catch (Exception ex)

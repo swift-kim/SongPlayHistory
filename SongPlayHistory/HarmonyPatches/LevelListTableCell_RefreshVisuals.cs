@@ -14,6 +14,7 @@ namespace SongPlayHistory.HarmonyPatches
             Color ____beatmapCharacteristicImagesNormalColor,
             Color ____selectedHighlightElementsColor)
         {
+            // TODO: Selection bugs after installing/uninstalling patches.
             foreach (var image in __instance.GetComponentsInChildren<Image>())
             {
                 // For performance reason, avoid using Linq.
