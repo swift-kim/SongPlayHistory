@@ -111,9 +111,6 @@ namespace SongPlayHistory
             if (contentType != StandardLevelDetailViewController.ContentType.Loading)
             {
                 Refresh();
-
-                // Make sure the song list is invalidated.
-                BeatSaberUI.ReloadSongList();
             }
         }
 

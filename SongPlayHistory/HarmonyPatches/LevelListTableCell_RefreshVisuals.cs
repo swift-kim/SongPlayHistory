@@ -14,17 +14,18 @@ namespace SongPlayHistory.HarmonyPatches
             Color ____beatmapCharacteristicImagesNormalColor,
             Color ____selectedHighlightElementsColor)
         {
-            // TODO: Selection bugs after installing/uninstalling patches.
             foreach (var image in __instance.GetComponentsInChildren<Image>())
             {
                 // For performance reason, avoid using Linq.
-                if (image.name == "Vote")
-                {
-                    image.color = ____selected ?
-                        ____highlighted ? ____selectedHighlightElementsColor : Color.black :
-                        ____beatmapCharacteristicImagesNormalColor;
-                    break;
-                }
+                if (image.name != "Vote")
+                    continue;
+
+                if (____selected)
+                    image.color = ____highlighted ? ____selectedHighlightElementsColor : Color.black;
+                else
+                    image.color = ____beatmapCharacteristicImagesNormalColor;
+
+                break;
             }
         }
     }

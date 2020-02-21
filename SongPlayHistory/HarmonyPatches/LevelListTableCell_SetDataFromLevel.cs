@@ -64,9 +64,10 @@ namespace SongPlayHistory.HarmonyPatches
                 voteIcon.sprite = vote.voteType == "Upvote" ? _thumbsUp : _thumbsDown;
                 voteIcon.rectTransform.anchoredPosition = new Vector2(pos, 0f);
 
-                ____songNameText.rectTransform.offsetMax -= new Vector2(3.5f, 0);
+                pos -= 3.5f;
+                ____songNameText.rectTransform.offsetMax = new Vector2(pos, ____songNameText.rectTransform.offsetMax.y);
                 ____songNameText.SetText(____songNameText.text); // Force refresh.
-                ____authorText.rectTransform.offsetMax -= new Vector2(3.5f, 0);
+                ____authorText.rectTransform.offsetMax = new Vector2(pos, ____authorText.rectTransform.offsetMax.y);
                 ____authorText.SetText(____songNameText.text); // Force refresh.
             }
         }
@@ -85,6 +86,7 @@ namespace SongPlayHistory.HarmonyPatches
 
         private static Sprite LoadSpriteFromResource(string resourcePath)
         {
+            // TODO: Image quality.
             try
             {
                 var stream = Assembly.GetCallingAssembly().GetManifestResourceStream(resourcePath);
