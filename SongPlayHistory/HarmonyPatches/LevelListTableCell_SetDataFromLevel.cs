@@ -43,6 +43,7 @@ namespace SongPlayHistory.HarmonyPatches
             {
                 voteIcon = UnityEngine.Object.Instantiate(____beatmapCharacteristicImages[0], __instance.transform);
                 voteIcon.name = "Vote";
+                voteIcon.rectTransform.sizeDelta = new Vector2(3f, 3f);
                 voteIcon.color = new Color(1f, 1f, 1f, 0.5f);
             }
             voteIcon.enabled = false;
@@ -86,7 +87,6 @@ namespace SongPlayHistory.HarmonyPatches
 
         private static Sprite LoadSpriteFromResource(string resourcePath)
         {
-            // TODO: Image quality.
             try
             {
                 var stream = Assembly.GetCallingAssembly().GetManifestResourceStream(resourcePath);
