@@ -64,7 +64,7 @@ namespace SongPlayHistory
             config.Scores[difficulty].Add(newScore);
 
             Plugin.ConfigProvider.Store(config);
-            Logger.Log.Debug($"Saved a new record {difficulty} ({record.modifiedScore}).");
+            Logger.Log.Info($"Saved a new record {difficulty} ({record.modifiedScore}).");
         }
 
         public static int GetPlayCount(IDifficultyBeatmap beatmap)
@@ -82,7 +82,7 @@ namespace SongPlayHistory
 
         public static bool UpdateVoteData()
         {
-            Logger.Log.Debug($"Looking for changes in {Path.GetFileName(_voteFile)}...");
+            Logger.Log.Info($"Looking for changes in {Path.GetFileName(_voteFile)}...");
 
             if (!File.Exists(_voteFile))
             {
@@ -98,7 +98,7 @@ namespace SongPlayHistory
                     var text = File.ReadAllText(_voteFile);
                     VoteData = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text);
 
-                    Logger.Log.Debug("Update done.");
+                    Logger.Log.Info("Update done.");
                 }
 
                 return true;

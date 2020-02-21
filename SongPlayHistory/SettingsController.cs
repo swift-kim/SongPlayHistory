@@ -28,7 +28,8 @@ namespace SongPlayHistory
         [UIAction("#apply")]
         public void OnApply()
         {
-            Logger.Log.Debug("Applying settings...");
+            Logger.Log.Info("Applying settings...");
+
             Plugin.ConfigProvider.Store(Plugin.Config.Value);
             Plugin.ApplyHarmonyPatch(ShowVotes);
         }

@@ -98,7 +98,7 @@ namespace SongPlayHistory
             BeatSaberUI.ResultsViewController.restartButtonPressedEvent -= OnPlayResultDismiss;
             BeatSaberUI.ResultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
-            Logger.Log.Debug("Initialization complete.");
+            Logger.Log.Info("Initialization complete.");
         }
 
         private void OnDidChangeDifficultyBeatmap(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
@@ -134,7 +134,7 @@ namespace SongPlayHistory
 
         internal void Refresh()
         {
-            Logger.Log.Debug("Refreshing data...");
+            Logger.Log.Info("Refreshing data...");
 
             var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
             if (beatmap == null)

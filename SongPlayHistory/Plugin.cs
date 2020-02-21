@@ -43,8 +43,6 @@ namespace SongPlayHistory
 
         public void OnApplicationStart()
         {
-            Logger.Log.Debug("OnApplicationStart");
-
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuLoadedFresh;
 
@@ -133,12 +131,12 @@ namespace SongPlayHistory
             {
                 if (enabled && !Harmony.HasAnyPatches(HarmonyId))
                 {
-                    Logger.Log.Debug("Applying Harmony patches...");
+                    Logger.Log.Info("Applying Harmony patches...");
                     Harmony.PatchAll(Assembly.GetExecutingAssembly());
                 }
                 else if (!enabled && Harmony.HasAnyPatches(HarmonyId))
                 {
-                    Logger.Log.Debug("Removing Harmony patches...");
+                    Logger.Log.Info("Removing Harmony patches...");
                     Harmony.UnpatchAll(HarmonyId);
 
                     // Do clean-up manually.
