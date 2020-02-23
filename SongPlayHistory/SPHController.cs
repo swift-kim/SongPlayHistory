@@ -119,15 +119,11 @@ namespace SongPlayHistory
             var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
 
-            // Do not save failed records.
-            if (lastResult.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
-            {
-                SPHModel.SaveRecord(lastBeatmap, lastResult);
-            }
-
+            SPHModel.SaveRecord(lastBeatmap, lastResult);
             Refresh();
 
             // The user may have voted on this song.
+            // TODO: Reload only the highlighted cell.
             SPHModel.UpdateVoteData();
             BeatSaberUI.ReloadSongList();
         }

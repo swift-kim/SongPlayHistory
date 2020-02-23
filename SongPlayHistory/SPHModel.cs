@@ -23,8 +23,11 @@ namespace SongPlayHistory
 
             if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
             {
-                // Note: HoverHint max lines = 9
-                var orderedList = scoreList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
+                // This check doesn't make sense for some failed records from v0.1.0, but we ignore them for now.
+                var filteredList = scoreList.Where(x => x.LastNote == 0);
+                // HoverHint max lines = 9
+                var orderedList = filteredList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
+
                 if (orderedList.Count() > 0)
                 {
                     var maxRawScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
@@ -47,16 +50,22 @@ namespace SongPlayHistory
 
         public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults record)
         {
-            var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
-            var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
+            // TODO: How do we check if this record is from practice mode?
+
+            // We now keep failed records.
+            var cleared = record.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
             var newScore = new Score
             {
                 Date = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                 ModifiedScore = record.modifiedScore,
                 RawScore = record.rawScore,
+                LastNote = cleared ? 0 : record.goodCutsCount + record.badCutsCount + record.missedCount,
             };
 
             var config = Plugin.Config.Value;
+            var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+            var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
+
             if (!config.Scores.ContainsKey(difficulty))
             {
                 config.Scores.Add(difficulty, new List<Score>());
