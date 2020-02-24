@@ -116,6 +116,9 @@ namespace SongPlayHistory
 
         private void OnPlayResultDismiss(ResultsViewController resultsViewController)
         {
+            if (resultsViewController.practice)
+                return;
+
             var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
 

@@ -50,8 +50,6 @@ namespace SongPlayHistory
 
         public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults record)
         {
-            // TODO: How do we check if this record is from practice mode?
-
             // We now keep failed records.
             var cleared = record.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
             var newScore = new Score
