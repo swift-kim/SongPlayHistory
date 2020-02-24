@@ -27,7 +27,7 @@ namespace SongPlayHistory
         public static void ReloadSongList()
         {
             var levelCollection = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
-            levelCollection.ReloadData();
+            levelCollection.RefreshCellsContent();
         }
     }
 }

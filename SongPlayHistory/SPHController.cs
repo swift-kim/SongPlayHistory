@@ -126,7 +126,6 @@ namespace SongPlayHistory
             Refresh();
 
             // The user may have voted on this song.
-            // TODO: Reload only the highlighted cell.
             SPHModel.UpdateVoteData();
             BeatSaberUI.ReloadSongList();
         }

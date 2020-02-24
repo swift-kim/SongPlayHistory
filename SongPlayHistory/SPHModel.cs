@@ -23,6 +23,8 @@ namespace SongPlayHistory
 
             if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
             {
+                // TODO: Do something with failed records.
+
                 // This check doesn't make sense for some failed records from v0.1.0, but we ignore them for now.
                 var filteredList = scoreList.Where(x => x.LastNote == 0);
                 // HoverHint max lines = 9
