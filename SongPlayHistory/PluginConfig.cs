@@ -6,8 +6,9 @@ namespace SongPlayHistory
     {
         public bool RegenerateConfig = false;
         public bool ShowPlayCounts = true;
-        public bool ShowVotes = true;
+        public bool ShowFailed = true;
         public bool SortByDate = false;
+        public bool ShowVotes = true;
 
         // User scores are stored in the config file.
         // Key: [levelID]___[difficulty]___[beatmapCharacteristicName] (e.g. PopStars___4___Standard)

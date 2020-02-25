@@ -1,5 +1,6 @@
 ﻿<settings-container>
   <bool-setting text='Show Play Counts' value='show-play-counts' hover-hint='Display my total play counts'></bool-setting>
-  <bool-setting text='Show Up/Downvotes' value='show-votes' hover-hint='Show vote icons in the song list by integrating my BeatSaverVoting data'></bool-setting>
-  <bool-setting text='Sort by Date' value='sort-by-date' hover-hint='Latest scores on the top'></bool-setting>
+  <bool-setting text='Show Failed' value='show-failed' hover-hint='Display failed records'></bool-setting>
+  <bool-setting text='Sort by Date' value='sort-by-date' hover-hint='Latest records (otherwise highest scores) on the top'></bool-setting>
+  <bool-setting text='Show Up/Downvotes' value='show-votes' hover-hint='Display thumbs up/down icons in the song list'></bool-setting>
 </settings-container>

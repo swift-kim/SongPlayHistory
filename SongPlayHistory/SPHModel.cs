@@ -23,10 +23,9 @@ namespace SongPlayHistory
 
             if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
             {
-                // TODO: Do something with failed records.
+                // LastNote = -1 (cleared), 0 (undefined), larger (failed)
+                var filteredList = config.ShowFailed ? scoreList : scoreList.Where(x => x.LastNote <= 0);
 
-                // This check doesn't make sense for some failed records from v0.1.0, but we ignore them for now.
-                var filteredList = scoreList.Where(x => x.LastNote == 0);
                 // HoverHint max lines = 9
                 var orderedList = filteredList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
 
@@ -39,8 +38,23 @@ namespace SongPlayHistory
                     {
                         var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(elem.Date).LocalDateTime;
                         var modifiedScore = elem.ModifiedScore + (elem.RawScore != elem.ModifiedScore ? "*" : "");
-                        var accuracy = elem.RawScore / (float)maxRawScore * 100f;
-                        builder.AppendLine($"[{localDateTime.ToString("g")}] {modifiedScore} ({accuracy:0.00}%)");
+                        var notesRemaining = beatmap.beatmapData.notesCount - elem.LastNote;
+
+                        // TODO: Create a page (or button) to delete individual (or all) records.
+
+                        // TODO: Clean up this mess.
+                        // TODO: Make the display format configurable.
+                        if (elem.LastNote > 0)
+                        {
+                            var accuracy = elem.RawScore / (float)ScoreController.MaxRawScoreForNumberOfNotes(elem.LastNote) * 100f;
+                            builder.AppendLine($"[{localDateTime.ToString("d")}] {modifiedScore} ({accuracy:0.00}%, -{notesRemaining} notes)");
+                        }
+                        else
+                        {
+                            // TODO: Neatly deal with old records (LastNote = 0).
+                            var accuracy = elem.RawScore / (float)maxRawScore * 100f;
+                            builder.AppendLine($"[{localDateTime.ToString("d")}] {modifiedScore} ({accuracy:0.00}%)");
+                        }
                     }
 
                     return builder.ToString();
@@ -59,7 +73,7 @@ namespace SongPlayHistory
                 Date = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                 ModifiedScore = record.modifiedScore,
                 RawScore = record.rawScore,
-                LastNote = cleared ? 0 : record.goodCutsCount + record.badCutsCount + record.missedCount,
+                LastNote = cleared ? -1 : record.goodCutsCount + record.badCutsCount + record.missedCount,
             };
 
             var config = Plugin.Config.Value;

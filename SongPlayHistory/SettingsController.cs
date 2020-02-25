@@ -11,11 +11,11 @@ namespace SongPlayHistory
             set => Plugin.Config.Value.ShowPlayCounts = value;
         }
 
-        [UIValue("show-votes")]
-        public bool ShowVotes
+        [UIValue("show-failed")]
+        public bool ShowFailed
         {
-            get => Plugin.Config.Value.ShowVotes;
-            set => Plugin.Config.Value.ShowVotes = value;
+            get => Plugin.Config.Value.ShowFailed;
+            set => Plugin.Config.Value.ShowFailed = value;
         }
 
         [UIValue("sort-by-date")]
@@ -23,6 +23,13 @@ namespace SongPlayHistory
         {
             get => Plugin.Config.Value.SortByDate;
             set => Plugin.Config.Value.SortByDate = value;
+        }
+
+        [UIValue("show-votes")]
+        public bool ShowVotes
+        {
+            get => Plugin.Config.Value.ShowVotes;
+            set => Plugin.Config.Value.ShowVotes = value;
         }
 
         [UIAction("#apply")]
