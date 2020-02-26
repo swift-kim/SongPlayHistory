@@ -6,7 +6,7 @@ namespace SongPlayHistory
     {
         public bool RegenerateConfig = false;
         public bool ShowPlayCounts = true;
-        public bool ShowFailed = true;
+        public bool ShowFailed = false;
         public bool SortByDate = false;
         public bool ShowVotes = true;
 

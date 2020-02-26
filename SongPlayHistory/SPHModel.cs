@@ -41,19 +41,21 @@ namespace SongPlayHistory
                         var notesRemaining = beatmap.beatmapData.notesCount - elem.LastNote;
 
                         // TODO: Create a page (or button) to delete individual (or all) records.
-
-                        // TODO: Clean up this mess.
+                        // TODO: More filtering options (e.g. ignore records < 10%).
                         // TODO: Make the display format configurable.
+
+                        builder.Append($"<size=3>{localDateTime.ToString("d")}</size>");
                         if (elem.LastNote > 0)
                         {
                             var accuracy = elem.RawScore / (float)ScoreController.MaxRawScoreForNumberOfNotes(elem.LastNote) * 100f;
-                            builder.AppendLine($"[{localDateTime.ToString("d")}] {modifiedScore} ({accuracy:0.00}%, -{notesRemaining} notes)");
+                            builder.Append($"<size=4><color=#88e1f2ff> {modifiedScore}</color><color=#ffd082ff> {accuracy:0.00}%</color></size>");
+                            builder.Append($"<size=3><color=#ff7c7cff> {notesRemaining} notes left</color></size>\n");
                         }
                         else
                         {
                             // TODO: Neatly deal with old records (LastNote = 0).
                             var accuracy = elem.RawScore / (float)maxRawScore * 100f;
-                            builder.AppendLine($"[{localDateTime.ToString("d")}] {modifiedScore} ({accuracy:0.00}%)");
+                            builder.Append($"<size=4><color=#88e1f2ff> {modifiedScore}</color><color=#ffd082ff> {accuracy:0.00}%</color></size>\n");
                         }
                     }
 
