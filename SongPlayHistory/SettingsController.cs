@@ -18,6 +18,13 @@ namespace SongPlayHistory
             set => Plugin.Config.Value.ShowFailed = value;
         }
 
+        [UIValue("average-accuracy")]
+        public bool AverageAccuracy
+        {
+            get => Plugin.Config.Value.AverageAccuracy;
+            set => Plugin.Config.Value.AverageAccuracy = value;
+        }
+
         [UIValue("sort-by-date")]
         public bool SortByDate
         {

@@ -122,6 +122,7 @@ namespace SongPlayHistory
             var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
 
+            // Note: Never hit if Auto Restart on Fail is enabled.
             SPHModel.SaveRecord(lastBeatmap, lastResult);
             Refresh();
 

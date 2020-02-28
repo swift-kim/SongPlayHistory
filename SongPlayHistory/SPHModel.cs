@@ -23,8 +23,8 @@ namespace SongPlayHistory
 
             if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
             {
-                // LastNote = -1 (cleared), 0 (undefined), larger (failed)
-                var filteredList = config.ShowFailed ? scoreList : scoreList.Where(x => x.LastNote <= 0);
+                // LastNote = -1 (cleared), 0 (undefined), n (failed)
+                var filteredList = config.ShowFailed ? scoreList : scoreList.Where(s => s.LastNote <= 0);
 
                 // HoverHint max lines = 9
                 var orderedList = filteredList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
@@ -34,29 +34,41 @@ namespace SongPlayHistory
                     var maxRawScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
                     StringBuilder builder = new StringBuilder(200);
 
-                    foreach (var elem in orderedList)
+                    foreach (var s in orderedList)
                     {
-                        var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(elem.Date).LocalDateTime;
-                        var modifiedScore = elem.ModifiedScore + (elem.RawScore != elem.ModifiedScore ? "*" : "");
-                        var notesRemaining = beatmap.beatmapData.notesCount - elem.LastNote;
-
-                        // TODO: Create a page (or button) to delete individual (or all) records.
-                        // TODO: More filtering options (e.g. ignore records < 10%).
-                        // TODO: Make the display format configurable.
+                        var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(s.Date).LocalDateTime;
+                        // Only show modified scores as we don't have much space.
+                        var modifiedScore = s.ModifiedScore + (s.RawScore != s.ModifiedScore ? "*" : "");
+                        var notesRemaining = beatmap.beatmapData.notesCount - s.LastNote;
+                        var accuracy = s.RawScore / (float)maxRawScore * 100f;
 
                         builder.Append($"<size=3>{localDateTime.ToString("d")}</size>");
-                        if (elem.LastNote > 0)
+                        if (s.LastNote > 0)
                         {
-                            var accuracy = elem.RawScore / (float)ScoreController.MaxRawScoreForNumberOfNotes(elem.LastNote) * 100f;
-                            builder.Append($"<size=4><color=#88e1f2ff> {modifiedScore}</color><color=#ffd082ff> {accuracy:0.00}%</color></size>");
-                            builder.Append($"<size=3><color=#ff7c7cff> {notesRemaining} notes left</color></size>\n");
+                            if (config.AverageAccuracy)
+                            {
+                                accuracy = s.RawScore / (float)ScoreController.MaxRawScoreForNumberOfNotes(s.LastNote) * 100f;
+                            }
+                            builder.Append($"<size=4><color=#96ceb4ff> {modifiedScore}</color><color=#ffcc5cff> {accuracy:0.00}%</color></size>");
+                            builder.Append($"<size=3><color=#ff6f69ff> {notesRemaining} notes left</color></size>");
                         }
                         else
                         {
-                            // TODO: Neatly deal with old records (LastNote = 0).
-                            var accuracy = elem.RawScore / (float)maxRawScore * 100f;
-                            builder.Append($"<size=4><color=#88e1f2ff> {modifiedScore}</color><color=#ffd082ff> {accuracy:0.00}%</color></size>\n");
+                            builder.Append($"<size=4><color=#96ceb4ff> {modifiedScore}</color><color=#ffcc5cff> {accuracy:0.00}%</color></size>");
+                            if (config.ShowFailed)
+                            {
+                                if (s.LastNote == 0)
+                                {
+                                    // There's no information about this old record (maybe failed or practice).
+                                    builder.Append($"<size=3><color=#c7c7c7ff> unknown</color></size>");
+                                }
+                                else
+                                {
+                                    builder.Append($"<size=3><color=#d0f5fcff> cleared</color></size>");
+                                }
+                            }
                         }
+                        builder.AppendLine();
                     }
 
                     return builder.ToString();
