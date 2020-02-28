@@ -140,7 +140,7 @@ namespace SongPlayHistory
                     Harmony.UnpatchAll(HarmonyId);
 
                     // Do clean-up manually.
-                    LevelListTableCell_SetDataFromLevel.OnUnpatch();
+                    SetDataFromLevelAsync.OnUnpatch();
                 }
             }
             catch (Exception ex)

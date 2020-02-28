@@ -100,8 +100,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BeatSaberUI.cs" />
-    <Compile Include="HarmonyPatches\LevelListTableCell_RefreshVisuals.cs" />
-    <Compile Include="HarmonyPatches\LevelListTableCell_SetDataFromLevel.cs" />
+    <Compile Include="HarmonyPatches\LevelListTableCell.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PluginConfig.cs" />
