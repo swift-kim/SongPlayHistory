@@ -10,9 +10,13 @@ Track all your scores.
 
 ## Features
 
-- Display your scores and total play counts
-- Display your _BeatSaverVoting_ upvote/downvotes
-- _(Planned)_ Integrate into the leaderboard system 
+- Show your local records and total play counts
+- Show which songs you liked or disliked
+- _(Planned)_ Integrate into the leaderboard system
+
+## Installation
+
+Use [ModAssistant](https://github.com/Assistant/ModAssistant/releases) to get the latest stable version.
 
 ## Notes
 
