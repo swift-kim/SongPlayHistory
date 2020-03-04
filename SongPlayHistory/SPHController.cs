@@ -88,7 +88,8 @@ namespace SongPlayHistory
             BeatSaberUI.Initialize();
             _ui = new SPHUI();
 
-            // Install event handlers.
+            // Do not change these to BS_Utils.Utilities.BSEvents or BS_Utils.Plugin.LevelDidFinishEvent
+            // unless you fully understand side effects.
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
             BeatSaberUI.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContent;
