@@ -58,7 +58,7 @@ namespace SongPlayHistory.HarmonyPatches
                 {
                     if (Array.IndexOf(____beatmapCharacteristics, d.beatmapCharacteristic) >= 0)
                     {
-                        pos -= 4f;
+                        pos -= d.beatmapCharacteristic.serializedName == "90Degree" ? 3.125f : 4f;
                     }
                 }
                 voteIcon.enabled = true;
