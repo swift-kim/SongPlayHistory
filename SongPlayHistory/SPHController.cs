@@ -90,6 +90,7 @@ namespace SongPlayHistory
 
             // Do not change these to BS_Utils.Utilities.BSEvents or BS_Utils.Plugin.LevelDidFinishEvent
             // unless you fully understand side effects.
+            // Note: ResultsViewController is not displayed on fail if Auto Restart on Fail is enabled.
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
             BeatSaberUI.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContent;
@@ -120,12 +121,13 @@ namespace SongPlayHistory
             if (resultsViewController.practice)
                 return;
 
-            var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
-
-            // Note: Never hit if Auto Restart on Fail is enabled.
-            SPHModel.SaveRecord(lastBeatmap, lastResult);
-            Refresh();
+            if (lastResult.rawScore > 0)
+            {
+                var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
+                SPHModel.SaveRecord(lastBeatmap, lastResult);
+                Refresh();
+            }
 
             // The user may have voted on this song.
             SPHModel.UpdateVoteData();
