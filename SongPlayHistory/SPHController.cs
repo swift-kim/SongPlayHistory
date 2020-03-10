@@ -125,7 +125,7 @@ namespace SongPlayHistory
             if (lastResult.rawScore > 0)
             {
                 var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
-                SPHModel.SaveRecord(lastBeatmap, lastResult);
+                SPHModel.SaveRecord(lastBeatmap, lastResult, false);
                 Refresh();
             }
 

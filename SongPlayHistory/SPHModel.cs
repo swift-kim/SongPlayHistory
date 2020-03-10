@@ -31,42 +31,33 @@ namespace SongPlayHistory
 
                 if (orderedList.Count() > 0)
                 {
-                    var maxRawScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
-                    StringBuilder builder = new StringBuilder(200);
+                    var maxScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
+                    var builder = new StringBuilder(200);
 
                     foreach (var s in orderedList)
                     {
                         var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(s.Date).LocalDateTime;
-                        // Only show modified scores as we don't have much space.
-                        var modifiedScore = s.ModifiedScore + (s.RawScore != s.ModifiedScore ? "*" : "");
+                        var denom = config.AverageAccuracy && s.LastNote > 0 ? ScoreController.MaxRawScoreForNumberOfNotes(s.LastNote) : maxScore;
+                        var accuracy = s.RawScore / (float)denom * 100f;
+                        var param = ConcatParam((Param)s.Param);
+                        if (param.Length == 0 && s.RawScore != s.ModifiedScore)
+                        {
+                            param = "N/A";
+                        }
                         var notesRemaining = beatmap.beatmapData.notesCount - s.LastNote;
-                        var accuracy = s.RawScore / (float)maxRawScore * 100f;
 
                         builder.Append($"<size=3>{localDateTime.ToString("d")}</size>");
-                        if (s.LastNote > 0)
+                        builder.Append($"<size=4><color=#96ceb4ff> {s.ModifiedScore}</color></size>");
+                        builder.Append($"<size=2> {param} </size>");
+                        builder.Append($"<size=4><color=#ffcc5cff>{accuracy:0.00}%</color></size>");
+                        if (config.ShowFailed)
                         {
-                            if (config.AverageAccuracy)
-                            {
-                                accuracy = s.RawScore / (float)ScoreController.MaxRawScoreForNumberOfNotes(s.LastNote) * 100f;
-                            }
-                            builder.Append($"<size=4><color=#96ceb4ff> {modifiedScore}</color><color=#ffcc5cff> {accuracy:0.00}%</color></size>");
-                            builder.Append($"<size=3><color=#ff6f69ff> {notesRemaining} notes left</color></size>");
-                        }
-                        else
-                        {
-                            builder.Append($"<size=4><color=#96ceb4ff> {modifiedScore}</color><color=#ffcc5cff> {accuracy:0.00}%</color></size>");
-                            if (config.ShowFailed)
-                            {
-                                if (s.LastNote == 0)
-                                {
-                                    // There's no information about this old record (maybe failed or practice).
-                                    builder.Append($"<size=3><color=#c7c7c7ff> unknown</color></size>");
-                                }
-                                else
-                                {
-                                    builder.Append($"<size=3><color=#d0f5fcff> cleared</color></size>");
-                                }
-                            }
+                            if (s.LastNote == -1)
+                                builder.Append($"<size=3><color=#d0f5fcff> cleared</color></size>");
+                            else if (s.LastNote == 0) // old record (success, failed, or practice)
+                                builder.Append($"<size=3><color=#c7c7c7ff> unknown</color></size>");
+                            else
+                                builder.Append($"<size=3><color=#ff6f69ff> {notesRemaining} notes left</color></size>");
                         }
                         builder.AppendLine();
                     }
@@ -78,16 +69,22 @@ namespace SongPlayHistory
             return "No record";
         }
 
-        public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults record)
+        public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults record, bool submissionDisabled = false)
         {
             // We now keep failed records.
             var cleared = record.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
+
+            // If submissionDisabled = true, we assume custom gameplay modifiers are applied.
+            var param = ModsToParam(record.gameplayModifiers);
+            param |= submissionDisabled ? Param.SubmissionDisabled : 0;
+
             var newScore = new Score
             {
                 Date = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                 ModifiedScore = record.modifiedScore,
                 RawScore = record.rawScore,
                 LastNote = cleared ? -1 : record.goodCutsCount + record.badCutsCount + record.missedCount,
+                Param = (int)param,
             };
 
             var config = Plugin.Config.Value;
@@ -145,6 +142,52 @@ namespace SongPlayHistory
                 Logger.Log.Error(ex.ToString());
                 return false;
             }
+        }
+
+        private static Param ModsToParam(GameplayModifiers mods)
+        {
+            Param param = Param.None;
+            param |= mods.batteryEnergy ? Param.BatteryEnergy : 0;
+            param |= mods.noFail ? Param.NoFail : 0;
+            param |= mods.instaFail ? Param.InstaFail : 0;
+            param |= mods.noObstacles ? Param.NoObstacles : 0;
+            param |= mods.noBombs ? Param.NoBombs : 0;
+            param |= mods.fastNotes ? Param.FastNotes : 0;
+            param |= mods.strictAngles ? Param.StrictAngles : 0;
+            param |= mods.disappearingArrows ? Param.DisappearingArrows : 0;
+            param |= mods.songSpeed == GameplayModifiers.SongSpeed.Faster ? Param.FasterSong : 0;
+            param |= mods.songSpeed == GameplayModifiers.SongSpeed.Slower ? Param.SlowerSong : 0;
+            param |= mods.noArrows ? Param.NoArrows : 0;
+            param |= mods.ghostNotes ? Param.GhostNotes : 0;
+            return param;
+        }
+
+        private static string ConcatParam(Param param)
+        {
+            if (param == Param.None)
+                return "";
+
+            var mods = new List<string>();
+            if (param.HasFlag(Param.SubmissionDisabled)) mods.Add("??");
+            if (param.HasFlag(Param.DisappearingArrows)) mods.Add("DA");
+            if (param.HasFlag(Param.GhostNotes)) mods.Add("GN");
+            if (param.HasFlag(Param.FasterSong)) mods.Add("FS");
+            if (param.HasFlag(Param.NoFail)) mods.Add("NF");
+            if (param.HasFlag(Param.NoObstacles)) mods.Add("NO");
+            if (param.HasFlag(Param.NoBombs)) mods.Add("NB");
+            if (param.HasFlag(Param.SlowerSong)) mods.Add("SS");
+            if (param.HasFlag(Param.NoArrows)) mods.Add("NA");
+            if (param.HasFlag(Param.InstaFail)) mods.Add("IF");
+            if (param.HasFlag(Param.BatteryEnergy)) mods.Add("BE");
+            if (param.HasFlag(Param.FastNotes)) mods.Add("FN");
+            if (param.HasFlag(Param.StrictAngles)) mods.Add("SA");
+            if (mods.Count > 4)
+            {
+                mods = mods.Take(3).ToList();
+                mods.Add("..");
+            }
+
+            return string.Join(",", mods);
         }
 
         public class UserVote
