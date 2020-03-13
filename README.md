@@ -15,7 +15,7 @@ Track all your scores.
 
 ## Installation
 
-- Use [ModAssistant](https://github.com/Assistant/ModAssistant/releases) to get the latest stable version.
+- Copy [SongPlayHistory.dll](https://github.com/swift-kim/SongPlayHistory/releases) to Beat Saber's _Plugins_ directory. (Required dependency: _BS Utils_, _BeatSaberMarkupLanguage_)
 
 ## Notes
 
