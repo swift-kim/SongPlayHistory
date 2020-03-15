@@ -116,7 +116,7 @@ namespace SongPlayHistory
 
         public static bool UpdateVoteData()
         {
-            Logger.Log.Info($"Looking for changes in {Path.GetFileName(_voteFile)}...");
+            Logger.Log.Info($"Scanning {Path.GetFileName(_voteFile)}...");
 
             if (!File.Exists(_voteFile))
             {

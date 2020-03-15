@@ -125,7 +125,11 @@ namespace SongPlayHistory
             if (lastResult.rawScore > 0)
             {
                 var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
-                SPHModel.SaveRecord(lastBeatmap, lastResult, false);
+                // The values of ScoreSubmission.Disabled and ModString are automatically reset when a level is cleared.
+                // Thus we use ScoreSubmission.WasDisabled to check if submission had been disabled during the last gameplay.
+                bool submissionDisabled = false; // ScoreSubmission.WasDisabled;
+
+                SPHModel.SaveRecord(lastBeatmap, lastResult, submissionDisabled);
                 Refresh();
             }
 

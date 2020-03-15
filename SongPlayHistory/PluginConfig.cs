@@ -11,7 +11,6 @@ namespace SongPlayHistory
         public bool SortByDate = false;
         public bool ShowVotes = true;
 
-        // We use the plugin config file to keep play records.
         // Key: [levelID]___[difficulty]___[beatmapCharacteristicName] (e.g. PopStars___4___Standard)
         // TODO: Create a page (or button) to delete individual (or all) records.
         public Dictionary<string, IList<Score>> Scores = new Dictionary<string, IList<Score>>();

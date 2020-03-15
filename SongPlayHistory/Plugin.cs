@@ -53,7 +53,7 @@ namespace SongPlayHistory
         {
             BSMLSettings.instance.AddSettingsMenu("Song Play History", $"{Name}.Views.Settings.bsml", SettingsController.instance);
 
-            // If there is a data structure change between releases, it will be handled here.
+            // If there is any data structure change between releases, it will be handled here.
             ConfigProvider.Store(Config.Value);
 
             SPHController.OnLoad();
