@@ -29,6 +29,7 @@ namespace SongPlayHistory
                 // HoverHint max lines = 9
                 var orderedList = filteredList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
 
+                // TODO: Should be part of UI but not model.
                 if (orderedList.Count() > 0)
                 {
                     var maxScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
@@ -48,8 +49,9 @@ namespace SongPlayHistory
 
                         builder.Append($"<size=3>{localDateTime.ToString("d")}</size>");
                         builder.Append($"<size=4><color=#96ceb4ff> {s.ModifiedScore}</color></size>");
-                        builder.Append($"<size=2> {param} </size>");
-                        builder.Append($"<size=4><color=#ffcc5cff>{accuracy:0.00}%</color></size>");
+                        if (param.Length > 0)
+                            builder.Append($"<size=2> {param}</size>");
+                        builder.Append($"<size=4><color=#ffcc5cff> {accuracy:0.00}%</color></size>");
                         if (config.ShowFailed)
                         {
                             if (s.LastNote == -1)
