@@ -130,8 +130,8 @@ namespace SongPlayHistory
                 bool submissionDisabled = false; // ScoreSubmission.WasDisabled;
 
                 SPHModel.SaveRecord(lastBeatmap, lastResult, submissionDisabled);
-                Refresh();
             }
+            Refresh();
 
             // The user may have voted on this song.
             SPHModel.UpdateVoteData();
