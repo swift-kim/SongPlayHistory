@@ -146,7 +146,7 @@ namespace SongPlayHistory
             if (beatmap == null)
                 return;
 
-            _ui.SetHoverText(SPHModel.GetRecords(beatmap));
+            _ui.ShowRecords(beatmap, SPHModel.GetRecords(beatmap));
 
             if (Plugin.Config.Value.ShowPlayCounts)
             {

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace SongPlayHistory
 {
@@ -15,60 +14,21 @@ namespace SongPlayHistory
 
         public static Dictionary<string, UserVote> VoteData;
 
-        public static string GetRecords(IDifficultyBeatmap beatmap)
+        public static List<Score> GetRecords(IDifficultyBeatmap beatmap)
         {
             var config = Plugin.Config.Value;
             var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
             var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
 
-            if (config.Scores.TryGetValue(difficulty, out IList<Score> scoreList))
+            if (config.Scores.TryGetValue(difficulty, out IList<Score> records))
             {
                 // LastNote = -1 (cleared), 0 (undefined), n (failed)
-                var filteredList = config.ShowFailed ? scoreList : scoreList.Where(s => s.LastNote <= 0);
-
-                // HoverHint max lines = 9
-                var orderedList = filteredList.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore).Take(9);
-
-                // TODO: Should be part of UI but not model.
-                if (orderedList.Count() > 0)
-                {
-                    var maxScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
-                    var builder = new StringBuilder(200);
-
-                    foreach (var s in orderedList)
-                    {
-                        var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(s.Date).LocalDateTime;
-                        var denom = config.AverageAccuracy && s.LastNote > 0 ? ScoreController.MaxRawScoreForNumberOfNotes(s.LastNote) : maxScore;
-                        var accuracy = s.RawScore / (float)denom * 100f;
-                        var param = ConcatParam((Param)s.Param);
-                        if (param.Length == 0 && s.RawScore != s.ModifiedScore)
-                        {
-                            param = "N/A";
-                        }
-                        var notesRemaining = beatmap.beatmapData.notesCount - s.LastNote;
-
-                        builder.Append($"<size=3>{localDateTime.ToString("d")}</size>");
-                        builder.Append($"<size=4><color=#96ceb4ff> {s.ModifiedScore}</color></size>");
-                        if (param.Length > 0)
-                            builder.Append($"<size=2> {param}</size>");
-                        builder.Append($"<size=4><color=#ffcc5cff> {accuracy:0.00}%</color></size>");
-                        if (config.ShowFailed)
-                        {
-                            if (s.LastNote == -1)
-                                builder.Append($"<size=3><color=#d0f5fcff> cleared</color></size>");
-                            else if (s.LastNote == 0) // old record (success, failed, or practice)
-                                builder.Append($"<size=3><color=#c7c7c7ff> unknown</color></size>");
-                            else
-                                builder.Append($"<size=3><color=#ff6f69ff> {notesRemaining} notes left</color></size>");
-                        }
-                        builder.AppendLine();
-                    }
-
-                    return builder.ToString();
-                }
+                var filtered = config.ShowFailed ? records : records.Where(s => s.LastNote <= 0);
+                var ordered = filtered.OrderByDescending(s => config.SortByDate ? s.Date : s.ModifiedScore);
+                return ordered.ToList();
             }
 
-            return "No record";
+            return new List<Score>();
         }
 
         public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults record, bool submissionDisabled = false)
@@ -162,34 +122,6 @@ namespace SongPlayHistory
             param |= mods.noArrows ? Param.NoArrows : 0;
             param |= mods.ghostNotes ? Param.GhostNotes : 0;
             return param;
-        }
-
-        private static string ConcatParam(Param param)
-        {
-            if (param == Param.None)
-                return "";
-
-            var mods = new List<string>();
-            if (param.HasFlag(Param.SubmissionDisabled)) mods.Add("??");
-            if (param.HasFlag(Param.DisappearingArrows)) mods.Add("DA");
-            if (param.HasFlag(Param.GhostNotes)) mods.Add("GN");
-            if (param.HasFlag(Param.FasterSong)) mods.Add("FS");
-            if (param.HasFlag(Param.NoFail)) mods.Add("NF");
-            if (param.HasFlag(Param.NoObstacles)) mods.Add("NO");
-            if (param.HasFlag(Param.NoBombs)) mods.Add("NB");
-            if (param.HasFlag(Param.SlowerSong)) mods.Add("SS");
-            if (param.HasFlag(Param.NoArrows)) mods.Add("NA");
-            if (param.HasFlag(Param.InstaFail)) mods.Add("IF");
-            if (param.HasFlag(Param.BatteryEnergy)) mods.Add("BE");
-            if (param.HasFlag(Param.FastNotes)) mods.Add("FN");
-            if (param.HasFlag(Param.StrictAngles)) mods.Add("SA");
-            if (mods.Count > 4)
-            {
-                mods = mods.Take(3).ToList();
-                mods.Add("..");
-            }
-
-            return string.Join(",", mods);
         }
 
         public class UserVote
