@@ -124,12 +124,11 @@ namespace SongPlayHistory
                 var playCountTitle = _playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
                 playCountTitle.SetText("Play Count");
 
-                // Resize and align.
-                // The original width is 70 but we only use 66 here (may be changed later).
-                _maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, -2.0f, 16.5f);
-                _highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 14.5f, 16.5f);
-                _maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 31.0f, 16.5f);
-                _playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 47.5f, 16.5f);
+                // Resize and align center. These values may be changed later.
+                _maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, -2.0f, 17.0f);
+                _highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 15.0f, 17.0f);
+                _maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 32.0f, 16.0f);
+                _playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 48.0f, 16.0f);
             }
 
             var playCountValue = _playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
