@@ -1,5 +1,5 @@
 ﻿using BeatSaberMarkupLanguage.Settings;
-using Harmony;
+using HarmonyLib;
 using IPA;
 using IPA.Config;
 using IPA.Config.Stores;
@@ -18,8 +18,8 @@ namespace SongPlayHistory
         public const string HarmonyId = "com.github.swift-kim.SongPlayHistory";
 
         public static Logger Log { get; private set; }
-        public static HarmonyInstance Harmony { get; private set; }
 
+        private static Harmony _harmony;
         private static readonly string _configFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.json");
         private static readonly string _backupFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.bak");
 
@@ -27,7 +27,7 @@ namespace SongPlayHistory
         public Plugin(Logger logger, Config conf)
         {
             Log = logger;
-            Harmony = HarmonyInstance.Create(HarmonyId);
+            _harmony = new Harmony(HarmonyId);
             PluginConfig.Instance = conf.Generated<PluginConfig>();
         }
 
@@ -59,12 +59,12 @@ namespace SongPlayHistory
                 if (enabled && !Harmony.HasAnyPatches(HarmonyId))
                 {
                     Log.Info("Applying Harmony patches...");
-                    Harmony.PatchAll(Assembly.GetExecutingAssembly());
+                    _harmony.PatchAll(Assembly.GetExecutingAssembly());
                 }
                 else if (!enabled && Harmony.HasAnyPatches(HarmonyId))
                 {
                     Log.Info("Removing Harmony patches...");
-                    Harmony.UnpatchAll(HarmonyId);
+                    _harmony.UnpatchAll(HarmonyId);
 
                     // Do clean-up manually.
                     SetDataFromLevelAsync.OnUnpatch();
