@@ -44,7 +44,6 @@ namespace SongPlayHistory
         {
             if (records?.Count() > 0)
             {
-                var config = Plugin.Config.Value;
                 var maxScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
                 var builder = new StringBuilder(200);
 
@@ -53,7 +52,7 @@ namespace SongPlayHistory
                 {
                     var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(r.Date).LocalDateTime;
                     var adjMaxScore = ScoreController.MaxRawScoreForNumberOfNotes(r.LastNote);
-                    var denom = config.AverageAccuracy && r.LastNote > 0 ? adjMaxScore : maxScore;
+                    var denom = PluginConfig.Instance.AverageAccuracy && r.LastNote > 0 ? adjMaxScore : maxScore;
                     var accuracy = r.RawScore / (float)denom * 100f;
                     var param = ConcatParam((Param)r.Param);
                     if (param.Length == 0 && r.RawScore != r.ModifiedScore)
@@ -67,7 +66,7 @@ namespace SongPlayHistory
                     if (param.Length > 0)
                         builder.Append($"<size=2> {param}</size>");
                     builder.Append($"<size=4><color=#ffcc5cff> {accuracy:0.00}%</color></size>");
-                    if (config.ShowFailed)
+                    if (PluginConfig.Instance.ShowFailed)
                     {
                         if (r.LastNote == -1)
                             builder.Append($"<size=3><color=#d0f5fcff> cleared</color></size>");

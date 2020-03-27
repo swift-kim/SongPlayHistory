@@ -7,10 +7,10 @@ namespace SongPlayHistory
 {
     internal static class BeatSaberUI
     {
-        public static ResultsViewController ResultsViewController;
-        public static LevelCollectionTableView LevelCollectionTableView;
-        public static StandardLevelDetailViewController LevelDetailViewController;
-        public static GameObject PlayerStatsContainer;
+        public static ResultsViewController ResultsViewController { get; private set; }
+        public static LevelCollectionTableView LevelCollectionTableView { get; private set; }
+        public static StandardLevelDetailViewController LevelDetailViewController { get; private set; }
+        public static GameObject PlayerStatsContainer { get; private set; }
 
         public static void Initialize()
         {

@@ -102,9 +102,7 @@
     <Compile Include="BeatSaberUI.cs" />
     <Compile Include="HarmonyPatches\LevelListTableCell.cs" />
     <Compile Include="Plugin.cs" />
-    <Compile Include="Logger.cs" />
     <Compile Include="PluginConfig.cs" />
-    <Compile Include="Score.cs" />
     <Compile Include="SPHController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingsController.cs" />

@@ -1,65 +1,82 @@
 ﻿using BeatSaberMarkupLanguage.Settings;
-using BS_Utils.Utilities;
 using Harmony;
 using IPA;
 using IPA.Config;
-using IPA.Utilities;
+using IPA.Config.Stores;
+using IPA.Logging;
 using SongPlayHistory.HarmonyPatches;
 using System;
 using System.IO;
 using System.Reflection;
-using UnityEngine.SceneManagement;
 
 namespace SongPlayHistory
 {
-    public class Plugin : IBeatSaberPlugin
+    [Plugin(RuntimeOptions.SingleStartInit)]
+    public class Plugin
     {
-        internal const string Name = "SongPlayHistory";
-        internal const string HarmonyId = "com.github.swift-kim.SongPlayHistory";
+        public const string Name = "SongPlayHistory";
+        public const string HarmonyId = "com.github.swift-kim.SongPlayHistory";
 
-        internal static IConfigProvider ConfigProvider;
-        internal static Ref<PluginConfig> Config;
-        internal static HarmonyInstance Harmony;
+        public static Logger Log { get; private set; }
+        public static HarmonyInstance Harmony { get; private set; }
 
-        private readonly string _configFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.json");
-        private readonly string _backupFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.bak");
+        private static readonly string _configFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.json");
+        private static readonly string _backupFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.bak");
 
-        public void Init(IPA.Logging.Logger logger, [IPA.Config.Config.Prefer("json")] IConfigProvider configProvider)
+        [Init]
+        public Plugin(Logger logger, Config conf)
         {
-            Logger.Log = logger;
-
-            ConfigProvider = configProvider;
-            Config = ConfigProvider.MakeLink<PluginConfig>((p, v) =>
-            {
-                if (v.Value == null || v.Value.RegenerateConfig)
-                {
-                    p.Store(v.Value = new PluginConfig() { RegenerateConfig = false });
-                }
-                Config = v;
-            });
-
+            Log = logger;
             Harmony = HarmonyInstance.Create(HarmonyId);
+            PluginConfig.Instance = conf.Generated<PluginConfig>();
         }
 
-        public void OnApplicationStart()
+        [OnStart]
+        public void OnStart()
         {
-            BSEvents.OnLoad();
-            BSEvents.menuSceneLoadedFresh += OnMenuLoadedFresh;
+            BS_Utils.Utilities.BSEvents.OnLoad();
+            BS_Utils.Utilities.BSEvents.menuSceneLoadedFresh += OnMenuLoadedFresh;
 
-            ApplyHarmonyPatch(Config.Value.ShowVotes);
+            ApplyHarmonyPatches(PluginConfig.Instance.ShowVotes);
+        }
+
+        [OnExit]
+        public void OnExit()
+        {
+            BackupConfig();
         }
 
         private void OnMenuLoadedFresh()
         {
             BSMLSettings.instance.AddSettingsMenu("Song Play History", $"{Name}.Views.Settings.bsml", SettingsController.instance);
-
-            // If there is any data structure change between releases, it will be handled here.
-            ConfigProvider.Store(Config.Value);
-
             SPHController.OnLoad();
         }
 
-        public void OnApplicationQuit()
+        public static void ApplyHarmonyPatches(bool enabled)
+        {
+            try
+            {
+                if (enabled && !Harmony.HasAnyPatches(HarmonyId))
+                {
+                    Log.Info("Applying Harmony patches...");
+                    Harmony.PatchAll(Assembly.GetExecutingAssembly());
+                }
+                else if (!enabled && Harmony.HasAnyPatches(HarmonyId))
+                {
+                    Log.Info("Removing Harmony patches...");
+                    Harmony.UnpatchAll(HarmonyId);
+
+                    // Do clean-up manually.
+                    SetDataFromLevelAsync.OnUnpatch();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error while applying Harmony patches.\n" + ex.ToString());
+            }
+        }
+
+        private static void BackupConfig()
         {
             if (!File.Exists(_configFile))
                 return;
@@ -75,7 +92,7 @@ namespace SongPlayHistory
                     }
                     else
                     {
-                        Logger.Log.Info("Did not overwrite the existing file.");
+                        Log.Info("Did not overwrite the existing file.");
                     }
                 }
                 else
@@ -85,67 +102,7 @@ namespace SongPlayHistory
             }
             catch (IOException ex)
             {
-                Logger.Log.Error(ex.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Runs at a fixed intervalue, generally used for physics calculations. 
-        /// </summary>
-        public void OnFixedUpdate()
-        {
-        }
-
-        /// <summary>
-        /// This is called every frame.
-        /// </summary>
-        public void OnUpdate()
-        {
-        }
-
-        /// <summary>
-        /// Called when the active scene is changed.
-        /// </summary>
-        /// <param name="prevScene">The scene you are transitioning from.</param>
-        /// <param name="nextScene">The scene you are transitioning to.</param>
-        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
-        {
-        }
-
-        /// <summary>
-        /// Called when the a scene's assets are loaded.
-        /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="sceneMode"></param>
-        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
-        {
-        }
-
-        public void OnSceneUnloaded(Scene scene)
-        {
-        }
-
-        public static void ApplyHarmonyPatch(bool enabled)
-        {
-            try
-            {
-                if (enabled && !Harmony.HasAnyPatches(HarmonyId))
-                {
-                    Logger.Log.Info("Applying Harmony patches...");
-                    Harmony.PatchAll(Assembly.GetExecutingAssembly());
-                }
-                else if (!enabled && Harmony.HasAnyPatches(HarmonyId))
-                {
-                    Logger.Log.Info("Removing Harmony patches...");
-                    Harmony.UnpatchAll(HarmonyId);
-
-                    // Do clean-up manually.
-                    SetDataFromLevelAsync.OnUnpatch();
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Log.Error("Error while applying Harmony patches.\n" + ex.ToString());
+                Log.Error(ex.ToString());
             }
         }
     }

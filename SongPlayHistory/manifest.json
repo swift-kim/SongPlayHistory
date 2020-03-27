@@ -1,14 +1,14 @@
 ﻿{
-  "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
   "author": "peperoro",
-  "description": "Track all your scores",
-  "gameVersion": "1.6.1",
+  "description": [
+    "Track all your scores."
+  ],
+  "gameVersion": "1.8.0",
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
-  "version": "1.1.0",
-  "dependsOn": {
-    "BS Utils": "^1.4.1",
-    "BeatSaberMarkupLanguage": "^1.1.5"
-  },
-  "features": []
+  "version": "1.2.0",
+  "features": [],
+  "links": {
+    "project-home": "https://github.com/swift-kim/SongPlayHistory"
+  }
 }

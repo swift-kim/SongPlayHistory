@@ -9,14 +9,14 @@ namespace SongPlayHistory
 {
     internal static class SPHModel
     {
+        public static Dictionary<string, UserVote> VoteData { get; private set; }
+
         private static readonly string _voteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
         private static DateTime _voteLastWritten;
 
-        public static Dictionary<string, UserVote> VoteData;
-
         public static List<Score> GetRecords(IDifficultyBeatmap beatmap)
         {
-            var config = Plugin.Config.Value;
+            var config = PluginConfig.Instance;
             var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
             var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
 
@@ -46,10 +46,10 @@ namespace SongPlayHistory
                 ModifiedScore = record.modifiedScore,
                 RawScore = record.rawScore,
                 LastNote = cleared ? -1 : record.goodCutsCount + record.badCutsCount + record.missedCount,
-                Param = (int)param,
+                Param = (int)param
             };
 
-            var config = Plugin.Config.Value;
+            var config = PluginConfig.Instance;
             var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
             var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
 
@@ -59,8 +59,7 @@ namespace SongPlayHistory
             }
             config.Scores[difficulty].Add(newScore);
 
-            Plugin.ConfigProvider.Store(config);
-            Logger.Log.Info($"Saved a new record {difficulty} ({record.modifiedScore}).");
+            Plugin.Log.Info($"Saved a new record {difficulty} ({record.modifiedScore}).");
         }
 
         public static int GetPlayCount(IDifficultyBeatmap beatmap)
@@ -70,7 +69,7 @@ namespace SongPlayHistory
             var stat = statsList?.FirstOrDefault(x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
             if (stat == null)
             {
-                Logger.Log.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
+                Plugin.Log.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
                 return -1;
             }
             return stat.playCount;
@@ -78,11 +77,11 @@ namespace SongPlayHistory
 
         public static bool UpdateVoteData()
         {
-            Logger.Log.Info($"Scanning {Path.GetFileName(_voteFile)}...");
+            Plugin.Log.Info($"Scanning {Path.GetFileName(_voteFile)}...");
 
             if (!File.Exists(_voteFile))
             {
-                Logger.Log.Warn("The file doesn't exist.");
+                Plugin.Log.Warn("The file doesn't exist.");
                 return false;
             }
             try
@@ -94,14 +93,14 @@ namespace SongPlayHistory
                     var text = File.ReadAllText(_voteFile);
                     VoteData = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text);
 
-                    Logger.Log.Info("Update done.");
+                    Plugin.Log.Info("Update done.");
                 }
 
                 return true;
             }
             catch (Exception ex) // IOException, JsonException
             {
-                Logger.Log.Error(ex.ToString());
+                Plugin.Log.Error(ex.ToString());
                 return false;
             }
         }

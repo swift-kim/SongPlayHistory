@@ -1,4 +1,5 @@
-﻿using BS_Utils.Utilities;
+﻿using BS_Utils.Gameplay;
+using BS_Utils.Utilities;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,8 +8,9 @@ namespace SongPlayHistory
 {
     public class SPHController : MonoBehaviour
     {
-        public static SPHController Instance;
-        private SPHUI _ui;
+        public static SPHController Instance { get; set; }
+
+        private SPHUI _pluginUI;
 
         internal static void OnLoad()
         {
@@ -38,7 +40,7 @@ namespace SongPlayHistory
             var soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
             soloFreePlayButton.onClick.AddListener(() =>
             {
-                // Fail fast if there's any error during initialization.
+                // Fail fast when an error is encountered during initialization.
                 Initialize();
             });
         }
@@ -82,15 +84,14 @@ namespace SongPlayHistory
         private void Initialize()
         {
             // We don't have to re-initialize unless the menu scene is reloaded.
-            if (_ui != null)
+            if (_pluginUI != null)
                 return;
 
             BeatSaberUI.Initialize();
-            _ui = new SPHUI();
+            _pluginUI = new SPHUI();
 
-            // Do not change these to BS_Utils.Utilities.BSEvents or BS_Utils.Plugin.LevelDidFinishEvent
-            // unless you fully understand side effects.
-            // Note: ResultsViewController is not displayed on fail if Auto Restart on Fail is enabled.
+            // Do not change these to BS_Utils.Utilities.BSEvents.* or BS_Utils.Plugin.LevelDidFinishEvent
+            // unless you fully understand possible side effects (e.g. Auto Restart on Fail).
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
             BeatSaberUI.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContent;
@@ -100,7 +101,7 @@ namespace SongPlayHistory
             BeatSaberUI.ResultsViewController.restartButtonPressedEvent -= OnPlayResultDismiss;
             BeatSaberUI.ResultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
-            Logger.Log.Info("Initialization complete.");
+            Plugin.Log.Info("Initialization complete.");
         }
 
         private void OnDidChangeDifficultyBeatmap(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
@@ -127,7 +128,7 @@ namespace SongPlayHistory
                 var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
                 // The values of ScoreSubmission.Disabled and ModString are automatically reset when a level is cleared.
                 // Thus we use ScoreSubmission.WasDisabled to check if submission had been disabled during the last gameplay.
-                bool submissionDisabled = false; // ScoreSubmission.WasDisabled;
+                bool submissionDisabled = ScoreSubmission.WasDisabled;
 
                 SPHModel.SaveRecord(lastBeatmap, lastResult, submissionDisabled);
             }
@@ -140,21 +141,21 @@ namespace SongPlayHistory
 
         internal void Refresh()
         {
-            Logger.Log.Info("Refreshing data...");
+            Plugin.Log.Info("Refreshing data...");
 
             var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
             if (beatmap == null)
                 return;
 
-            _ui.ShowRecords(beatmap, SPHModel.GetRecords(beatmap));
+            _pluginUI.ShowRecords(beatmap, SPHModel.GetRecords(beatmap));
 
-            if (Plugin.Config.Value.ShowPlayCounts)
+            if (PluginConfig.Instance.ShowPlayCounts)
             {
-                _ui.ShowPlayCount(SPHModel.GetPlayCount(beatmap));
+                _pluginUI.ShowPlayCount(SPHModel.GetPlayCount(beatmap));
             }
             else
             {
-                _ui.UnshowPlayCount();
+                _pluginUI.UnshowPlayCount();
             }
         }
     }
