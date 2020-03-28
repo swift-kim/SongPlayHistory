@@ -126,8 +126,9 @@ namespace SongPlayHistory
                 // Thus we use ScoreSubmission.WasDisabled to check if submission had been disabled during the last gameplay.
                 bool submissionDisabled = ScoreSubmission.WasDisabled;
 
-                // ScoreSaber sets practice = true when submission is disabled (e.g. when AlternativePlay or BailOutMode is on.)
+                // BS_Utils sets practice = true when submission is disabled (e.g. when AlternativePlay or BailOutMode is on.)
                 // We don't actually know if it's real practice mode when practice = true. But we just do our best here.
+                // TODO: Revisit LevelData.GameplayCoreSceneSetupData.practiceSettings which is only available during gameplay.
                 if (!submissionDisabled && resultsViewController.practice)
                     return;
 

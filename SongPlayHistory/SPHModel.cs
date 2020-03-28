@@ -68,25 +68,24 @@ namespace SongPlayHistory
             return new List<Record>();
         }
 
-        public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults record, bool submissionDisabled = false)
+        public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults result, bool submissionDisabled = false)
         {
             // We now keep failed records.
-            var cleared = record.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
+            var cleared = result.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
 
             // If submissionDisabled = true, we assume custom gameplay modifiers are applied.
-            var param = ModsToParam(record.gameplayModifiers);
+            var param = ModsToParam(result.gameplayModifiers);
             param |= submissionDisabled ? Param.SubmissionDisabled : 0;
 
-            var newScore = new Record
+            var record = new Record
             {
                 Date = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                ModifiedScore = record.modifiedScore,
-                RawScore = record.rawScore,
-                LastNote = cleared ? -1 : record.goodCutsCount + record.badCutsCount + record.missedCount,
+                ModifiedScore = result.modifiedScore,
+                RawScore = result.rawScore,
+                LastNote = cleared ? -1 : result.goodCutsCount + result.badCutsCount + result.missedCount,
                 Param = (int)param
             };
 
-            var config = PluginConfig.Instance;
             var beatmapCharacteristicName = beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
             var difficulty = $"{beatmap.level.levelID}___{(int)beatmap.difficulty}___{beatmapCharacteristicName}";
 
@@ -94,10 +93,10 @@ namespace SongPlayHistory
             {
                 Records.Add(difficulty, new List<Record>());
             }
-            Records[difficulty].Add(newScore);
+            Records[difficulty].Add(record);
             SaveRecordsToFile();
 
-            Plugin.Log.Info($"Saved a new record {difficulty} ({record.modifiedScore}).");
+            Plugin.Log.Info($"Saved a new record {difficulty} ({result.modifiedScore}).");
         }
 
         private static Param ModsToParam(GameplayModifiers mods)
@@ -163,20 +162,25 @@ namespace SongPlayHistory
 
         private static void SaveRecordsToFile()
         {
-            var serialized = JsonConvert.SerializeObject(Records);
-            File.WriteAllText(_dataFile, serialized);
+            if (Records.Count > 0)
+            {
+                var serialized = JsonConvert.SerializeObject(Records, Formatting.Indented);
+                File.WriteAllText(_dataFile, serialized);
+            }
         }
 
         public static void ReadOrMigrateRecords()
         {
             // We should fail fast on an exception to prevent overwriting the existing records abnormally.
-            // TODO: Test failing scenario
             var configFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Plugin.Name}.json");
             if (File.Exists(configFile) && !File.Exists(_dataFile))
             {
                 var config = JObject.Parse(File.ReadAllText(configFile));
-                Records = config["Scores"].ToObject<Dictionary<string, IList<Record>>>();
-                SaveRecordsToFile();
+                if (config.TryGetValue("Scores", out var token))
+                {
+                    Records = token.ToObject<Dictionary<string, IList<Record>>>();
+                    SaveRecordsToFile();
+                }
             }
             else if (File.Exists(_dataFile))
             {
