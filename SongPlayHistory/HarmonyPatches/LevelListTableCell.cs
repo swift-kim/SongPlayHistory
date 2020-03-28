@@ -19,7 +19,7 @@ namespace SongPlayHistory.HarmonyPatches
             _thumbsUp = _thumbsUp ?? LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsUp.png");
             _thumbsDown = _thumbsDown ?? LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsDown.png");
 
-            return SPHModel.UpdateVoteData();
+            return SPHModel.ScanVoteData();
         }
 
         [HarmonyAfter(new string[] { "com.kyle1413.BeatSaber.SongCore" })]
@@ -48,10 +48,7 @@ namespace SongPlayHistory.HarmonyPatches
             }
             voteIcon.enabled = false;
 
-            if (SPHModel.VoteData == null)
-                return;
-
-            if (SPHModel.VoteData.TryGetValue(level.levelID.Replace("custom_level_", "").ToLower(), out var vote))
+            if (SPHModel.Votes.TryGetValue(level.levelID.Replace("custom_level_", "").ToLower(), out var vote))
             {
                 float pos = -1f;
                 foreach (var d in level.previewDifficultyBeatmapSets)

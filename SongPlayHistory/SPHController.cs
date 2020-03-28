@@ -119,23 +119,25 @@ namespace SongPlayHistory
 
         private void OnPlayResultDismiss(ResultsViewController resultsViewController)
         {
-            if (resultsViewController.practice)
-                return;
-
             var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
             if (lastResult.rawScore > 0)
             {
-                var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
                 // The values of ScoreSubmission.Disabled and ModString are automatically reset when a level is cleared.
                 // Thus we use ScoreSubmission.WasDisabled to check if submission had been disabled during the last gameplay.
                 bool submissionDisabled = ScoreSubmission.WasDisabled;
 
+                // ScoreSaber sets practice = true when submission is disabled (e.g. when AlternativePlay or BailOutMode is on.)
+                // We don't actually know if it's real practice mode when practice = true. But we just do our best here.
+                if (!submissionDisabled && resultsViewController.practice)
+                    return;
+
+                var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
                 SPHModel.SaveRecord(lastBeatmap, lastResult, submissionDisabled);
             }
             Refresh();
 
             // The user may have voted on this song.
-            SPHModel.UpdateVoteData();
+            SPHModel.ScanVoteData();
             BeatSaberUI.ReloadSongList();
         }
 

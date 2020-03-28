@@ -40,7 +40,7 @@ namespace SongPlayHistory
             _maxRank = BeatSaberUI.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
         }
 
-        public void ShowRecords(IDifficultyBeatmap beatmap, List<Score> records)
+        public void ShowRecords(IDifficultyBeatmap beatmap, List<Record> records)
         {
             if (records?.Count() > 0)
             {

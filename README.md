@@ -20,6 +20,5 @@ Track all your scores.
 ## Notes
 
 - Recording play data begins when you first install this plugin.
-- The data file is located in Beat Saber's _UserData_ directory. You can delete individual records from there if you want.
-- The data are not uploaded anywhere so you have to **backup** the file when re-installing the game.
+- The data file (_SongPlayData.json_) is created in Beat Saber's _UserData_ directory. The data are not uploaded anywhere so you have to **backup** the file when re-installing the game.
 - If you run into any problem, please contact me either via Discord _(peperoro#1013)_ or by filing an issue.

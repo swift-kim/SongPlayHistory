@@ -6,7 +6,6 @@ using IPA.Config.Stores;
 using IPA.Logging;
 using SongPlayHistory.HarmonyPatches;
 using System;
-using System.IO;
 using System.Reflection;
 
 namespace SongPlayHistory
@@ -20,14 +19,14 @@ namespace SongPlayHistory
         public static Logger Log { get; private set; }
 
         private static Harmony _harmony;
-        private static readonly string _configFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.json");
-        private static readonly string _backupFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Name}.bak");
 
         [Init]
         public Plugin(Logger logger, Config conf)
         {
             Log = logger;
             _harmony = new Harmony(HarmonyId);
+
+            SPHModel.ReadOrMigrateRecords();
             PluginConfig.Instance = conf.Generated<PluginConfig>();
         }
 
@@ -43,7 +42,7 @@ namespace SongPlayHistory
         [OnExit]
         public void OnExit()
         {
-            BackupConfig();
+            SPHModel.BackupRecords();
         }
 
         private void OnMenuLoadedFresh()
@@ -73,36 +72,6 @@ namespace SongPlayHistory
             catch (Exception ex)
             {
                 Log.Error("Error while applying Harmony patches.\n" + ex.ToString());
-            }
-        }
-
-        private static void BackupConfig()
-        {
-            if (!File.Exists(_configFile))
-                return;
-
-            try
-            {
-                if (File.Exists(_backupFile))
-                {
-                    // Compare file sizes instead of the last write time.
-                    if (new FileInfo(_configFile).Length > new FileInfo(_backupFile).Length)
-                    {
-                        File.Copy(_configFile, _backupFile, true);
-                    }
-                    else
-                    {
-                        Log.Info("Did not overwrite the existing file.");
-                    }
-                }
-                else
-                {
-                    File.Copy(_configFile, _backupFile);
-                }
-            }
-            catch (IOException ex)
-            {
-                Log.Error(ex.ToString());
             }
         }
     }
