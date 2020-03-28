@@ -20,7 +20,7 @@ namespace SongPlayHistory
             _ = new GameObject(nameof(SPHController)).AddComponent<SPHController>();
         }
 
-        #region Monobehaviour Messages
+        #region MonoBehaviour Messages
         /// <summary>
         /// Only ever called once, mainly used to initialize variables.
         /// </summary>

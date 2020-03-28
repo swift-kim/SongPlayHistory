@@ -44,14 +44,14 @@ namespace SongPlayHistory
         {
             if (records?.Count() > 0)
             {
-                var maxScore = ScoreController.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
+                var maxScore = ScoreModel.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
                 var builder = new StringBuilder(200);
 
                 // HoverHint max lines = 9
                 foreach (var r in records.Take(9))
                 {
                     var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(r.Date).LocalDateTime;
-                    var adjMaxScore = ScoreController.MaxRawScoreForNumberOfNotes(r.LastNote);
+                    var adjMaxScore = ScoreModel.MaxRawScoreForNumberOfNotes(r.LastNote);
                     var denom = PluginConfig.Instance.AverageAccuracy && r.LastNote > 0 ? adjMaxScore : maxScore;
                     var accuracy = r.RawScore / (float)denom * 100f;
                     var param = ConcatParam((Param)r.Param);

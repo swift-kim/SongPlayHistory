@@ -64,7 +64,7 @@ namespace SongPlayHistory
 
         public static int GetPlayCount(IDifficultyBeatmap beatmap)
         {
-            var playerDataModel = BeatSaberUI.LevelDetailViewController.GetPrivateField<PlayerDataModelSO>("_playerDataModel");
+            var playerDataModel = BeatSaberUI.LevelDetailViewController.GetPrivateField<PlayerDataModel>("_playerDataModel");
             var statsList = playerDataModel.playerData.levelsStatsData;
             var stat = statsList?.FirstOrDefault(x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
             if (stat == null)

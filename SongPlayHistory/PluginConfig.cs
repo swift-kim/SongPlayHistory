@@ -1,4 +1,6 @@
-﻿using System;
+﻿using IPA.Config.Stores.Attributes;
+using IPA.Config.Stores.Converters;
+using System;
 using System.Collections.Generic;
 
 namespace SongPlayHistory
@@ -7,7 +9,6 @@ namespace SongPlayHistory
     {
         public static PluginConfig Instance { get; set; }
 
-        public bool RegenerateConfig { get; set; } = false;
         public bool ShowPlayCounts { get; set; } = true;
         public bool ShowFailed { get; set; } = false;
         public bool AverageAccuracy { get; set; } = true;
