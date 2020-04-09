@@ -16,8 +16,8 @@ namespace SongPlayHistory.HarmonyPatches
 
         public static bool Prepare()
         {
-            _thumbsUp = _thumbsUp ?? LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsUp.png");
-            _thumbsDown = _thumbsDown ?? LoadSpriteFromResource("SongPlayHistory.Assets.ThumbsDown.png");
+            _thumbsUp ??= LoadSpriteFromResource($"{Plugin.Name}.Assets.ThumbsUp.png");
+            _thumbsDown ??= LoadSpriteFromResource($"{Plugin.Name}.Assets.ThumbsDown.png");
 
             return SPHModel.ScanVoteData();
         }
@@ -86,7 +86,7 @@ namespace SongPlayHistory.HarmonyPatches
         {
             try
             {
-                var stream = Assembly.GetCallingAssembly().GetManifestResourceStream(resourcePath);
+                using var stream = Assembly.GetCallingAssembly().GetManifestResourceStream(resourcePath);
                 var resource = new byte[stream.Length];
                 stream.Read(resource, 0, (int)stream.Length);
 
