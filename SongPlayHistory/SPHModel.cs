@@ -162,10 +162,17 @@ namespace SongPlayHistory
 
         private static void SaveRecordsToFile()
         {
-            if (Records.Count > 0)
+            try
             {
-                var serialized = JsonConvert.SerializeObject(Records, Formatting.Indented);
-                File.WriteAllText(_dataFile, serialized);
+                if (Records.Count > 0)
+                {
+                    var serialized = JsonConvert.SerializeObject(Records, Formatting.Indented);
+                    File.WriteAllText(_dataFile, serialized);
+                }
+            }
+            catch (Exception ex) // IOException, JsonException
+            {
+                Plugin.Log.Error(ex.ToString());
             }
         }
 
