@@ -11,6 +11,7 @@ namespace SongPlayHistory
         public static SPHController Instance { get; set; }
 
         private SPHUI _pluginUI;
+        private bool _isPractice;
 
         internal static void OnLoad()
         {
@@ -90,12 +91,15 @@ namespace SongPlayHistory
             BeatSaberUI.Initialize();
             _pluginUI = new SPHUI();
 
-            // Do not change these to BS_Utils.Utilities.BSEvents.* or BS_Utils.Plugin.LevelDidFinishEvent
-            // unless you fully understand possible side effects (e.g. Auto Restart on Fail).
-            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyBeatmap;
-            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyBeatmap;
-            BeatSaberUI.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContent;
-            BeatSaberUI.LevelDetailViewController.didPresentContentEvent += OnDidPresentContent;
+            // Harmony can be used to patch StandardLevelDetailView.RefreshContent() but I'm too lazy to implement it.
+            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
+            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDifficultyChanged;
+            BeatSaberUI.LevelDetailViewController.didPresentContentEvent -= OnLevelDetailPresented;
+            BeatSaberUI.LevelDetailViewController.didPresentContentEvent += OnLevelDetailPresented;
+
+            // Don't use BSEvents.levelCleared and BSEvents.levelFailed as they are defective.
+            BSEvents.gameSceneLoaded -= OnGameSceneLoaded;
+            BSEvents.gameSceneLoaded += OnGameSceneLoaded;
             BeatSaberUI.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
             BeatSaberUI.ResultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
             BeatSaberUI.ResultsViewController.restartButtonPressedEvent -= OnPlayResultDismiss;
@@ -104,12 +108,12 @@ namespace SongPlayHistory
             Plugin.Log.Info("Initialization complete.");
         }
 
-        private void OnDidChangeDifficultyBeatmap(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
+        private void OnDifficultyChanged(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
         {
             Refresh();
         }
 
-        private void OnDidPresentContent(StandardLevelDetailViewController _, StandardLevelDetailViewController.ContentType contentType)
+        private void OnLevelDetailPresented(StandardLevelDetailViewController _, StandardLevelDetailViewController.ContentType contentType)
         {
             if (contentType != StandardLevelDetailViewController.ContentType.Loading)
             {
@@ -117,23 +121,23 @@ namespace SongPlayHistory
             }
         }
 
+        private void OnGameSceneLoaded()
+        {
+            var practiceSettings = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData?.practiceSettings;
+            _isPractice = practiceSettings != null;
+        }
+
         private void OnPlayResultDismiss(ResultsViewController resultsViewController)
         {
-            var lastResult = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
-            if (lastResult.rawScore > 0)
+            if (_isPractice)
+                return;
+
+            var result = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
+            if (result.rawScore > 0)
             {
-                // The values of ScoreSubmission.Disabled and ModString are automatically reset when a level is cleared.
-                // Thus we use ScoreSubmission.WasDisabled to check if submission had been disabled during the last gameplay.
-                bool submissionDisabled = ScoreSubmission.WasDisabled;
-
-                // BS_Utils sets practice = true when submission is disabled (e.g. when AlternativePlay or BailOutMode is on.)
-                // We don't actually know if it's real practice mode when practice = true. But we just do our best here.
-                // TODO: Revisit LevelData.GameplayCoreSceneSetupData.practiceSettings which is only available during gameplay.
-                if (!submissionDisabled && resultsViewController.practice)
-                    return;
-
-                var lastBeatmap = resultsViewController.GetPrivateField<IDifficultyBeatmap>("_difficultyBeatmap");
-                SPHModel.SaveRecord(lastBeatmap, lastResult, submissionDisabled);
+                // Actually there's no way to know if any custom modifier was applied if the user failed a song.
+                var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
+                SPHModel.SaveRecord(beatmap, result, ScoreSubmission.WasDisabled);
             }
             Refresh();
 

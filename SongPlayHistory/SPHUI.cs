@@ -42,7 +42,7 @@ namespace SongPlayHistory
 
         public void ShowRecords(IDifficultyBeatmap beatmap, List<Record> records)
         {
-            if (records?.Count() > 0)
+            if (records?.Count > 0)
             {
                 var maxScore = ScoreModel.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
                 var builder = new StringBuilder(200);
