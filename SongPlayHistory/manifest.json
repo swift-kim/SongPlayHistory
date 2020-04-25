@@ -6,7 +6,7 @@
   "gameVersion": "1.8.0",
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "features": [],
   "links": {
     "project-home": "https://github.com/swift-kim/SongPlayHistory"
