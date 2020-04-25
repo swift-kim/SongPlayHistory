@@ -1,5 +1,6 @@
 ﻿using BS_Utils.Gameplay;
 using BS_Utils.Utilities;
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -154,15 +155,22 @@ namespace SongPlayHistory
             if (beatmap == null)
                 return;
 
-            _pluginUI.ShowRecords(beatmap, SPHModel.GetRecords(beatmap));
+            try
+            {
+                _pluginUI.ShowRecords(beatmap, SPHModel.GetRecords(beatmap));
 
-            if (PluginConfig.Instance.ShowPlayCounts)
-            {
-                _pluginUI.ShowPlayCount(SPHModel.GetPlayCount(beatmap));
+                if (PluginConfig.Instance.ShowPlayCounts)
+                {
+                    _pluginUI.ShowPlayCount(SPHModel.GetPlayCount(beatmap));
+                }
+                else
+                {
+                    _pluginUI.UnshowPlayCount();
+                }
             }
-            else
+            catch (Exception ex) // Any UnityException
             {
-                _pluginUI.UnshowPlayCount();
+                Plugin.Log.Error(ex.ToString());
             }
         }
     }
