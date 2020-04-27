@@ -66,7 +66,7 @@ namespace SongPlayHistory.HarmonyPatches
                 ____songNameText.rectTransform.offsetMax = new Vector2(pos, ____songNameText.rectTransform.offsetMax.y);
                 ____songNameText.SetText(____songNameText.text); // Force refresh.
                 ____authorText.rectTransform.offsetMax = new Vector2(pos, ____authorText.rectTransform.offsetMax.y);
-                ____authorText.SetText(____songNameText.text); // Force refresh.
+                ____authorText.SetText(____authorText.text); // Force refresh.
             }
         }
 
