@@ -147,7 +147,7 @@ namespace SongPlayHistory
             BeatSaberUI.ReloadSongList();
         }
 
-        internal void Refresh()
+        private void Refresh()
         {
             Plugin.Log.Info("Refreshing data...");
 

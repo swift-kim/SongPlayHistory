@@ -166,6 +166,7 @@ namespace SongPlayHistory
             {
                 if (Records.Count > 0)
                 {
+                    // This can be done synchronously because the overhead is small. (400 ms / 15 MB, 60 ms / 1 MB)
                     var serialized = JsonConvert.SerializeObject(Records, Formatting.Indented);
                     File.WriteAllText(_dataFile, serialized);
                 }
