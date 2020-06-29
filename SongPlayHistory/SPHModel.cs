@@ -146,7 +146,7 @@ namespace SongPlayHistory
                     _voteLastWritten = File.GetLastWriteTime(_voteFile);
 
                     var text = File.ReadAllText(_voteFile);
-                    Votes = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text);
+                    Votes = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text) ?? new Dictionary<string, UserVote>();
 
                     Plugin.Log.Info("Update done.");
                 }
@@ -179,21 +179,57 @@ namespace SongPlayHistory
 
         public static void ReadOrMigrateRecords()
         {
-            // We should fail fast on an exception to prevent overwriting the existing records abnormally.
             var configFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Plugin.Name}.json");
+
             if (File.Exists(configFile) && !File.Exists(_dataFile))
             {
+                // Migrate if any old records exist.
                 var config = JObject.Parse(File.ReadAllText(configFile));
                 if (config.TryGetValue("Scores", out var token))
                 {
-                    Records = token.ToObject<Dictionary<string, IList<Record>>>();
+                    Plugin.Log.Info("Migrating data...");
+                    Records = token.ToObject<Dictionary<string, IList<Record>>>() ?? new Dictionary<string, IList<Record>>();
                     SaveRecordsToFile();
                 }
             }
             else if (File.Exists(_dataFile))
             {
+                // Read previous data from a data file.
                 var text = File.ReadAllText(_dataFile);
-                Records = JsonConvert.DeserializeObject<Dictionary<string, IList<Record>>>(text);
+                try
+                {
+                    Records = JsonConvert.DeserializeObject<Dictionary<string, IList<Record>>>(text);
+                    if (Records == null)
+                    {
+                        throw new JsonReaderException("Unable to deserialize an empty JSON string.");
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    // The data file is corrupted.
+                    Plugin.Log.Error(ex.ToString());
+
+                    // Try to restore from a backup.
+                    var backup = new FileInfo(Path.ChangeExtension(_dataFile, ".bak"));
+                    if (backup.Exists && backup.Length > 0)
+                    {
+                        Plugin.Log.Info("Restoring from a backup...");
+                        text = File.ReadAllText(backup.FullName);
+
+                        Records = JsonConvert.DeserializeObject<Dictionary<string, IList<Record>>>(text);
+                        if (Records == null)
+                        {
+                            // Fail hard to prevent overwriting any previous data or breaking the game.
+                            throw new Exception("Failed to restore data.");
+                        }
+                    }
+                    else
+                    {
+                        // There's nothing more we can try. Overwrite the file.
+                        Records = new Dictionary<string, IList<Record>>();
+                    }
+                    SaveRecordsToFile();
+                }
             }
         }
 
@@ -214,7 +250,7 @@ namespace SongPlayHistory
                     }
                     else
                     {
-                        Plugin.Log.Info("Did not overwrite the existing file.");
+                        Plugin.Log.Info("Nothing to backup.");
                     }
                 }
                 else
