@@ -44,11 +44,11 @@ namespace SongPlayHistory
 
     internal static class SPHModel
     {
+        public static readonly string DataFile = Path.Combine(Environment.CurrentDirectory, "UserData", "SongPlayData.json");
+
         public static Dictionary<string, IList<Record>> Records { get; set; } = new Dictionary<string, IList<Record>>();
         public static Dictionary<string, UserVote> Votes { get; private set; } = new Dictionary<string, UserVote>();
 
-        private static readonly string _dataFile = Path.Combine(Environment.CurrentDirectory, "UserData", "SongPlayData.json");
-        private static readonly string _voteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
         private static DateTime _voteLastWritten;
 
         public static List<Record> GetRecords(IDifficultyBeatmap beatmap)
@@ -94,6 +94,8 @@ namespace SongPlayHistory
                 Records.Add(difficulty, new List<Record>());
             }
             Records[difficulty].Add(record);
+
+            // Save to a file. We do this synchronously because the overhead is small. (400 ms / 15 MB, 60 ms / 1 MB)
             SaveRecordsToFile();
 
             Plugin.Log.Info($"Saved a new record {difficulty} ({result.modifiedScore}).");
@@ -132,20 +134,22 @@ namespace SongPlayHistory
 
         public static bool ScanVoteData()
         {
-            Plugin.Log.Info($"Scanning {Path.GetFileName(_voteFile)}...");
+            var voteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
 
-            if (!File.Exists(_voteFile))
+            Plugin.Log.Info($"Scanning {Path.GetFileName(voteFile)}...");
+
+            if (!File.Exists(voteFile))
             {
                 Plugin.Log.Warn("The file doesn't exist.");
                 return false;
             }
             try
             {
-                if (_voteLastWritten != File.GetLastWriteTime(_voteFile))
+                if (_voteLastWritten != File.GetLastWriteTime(voteFile))
                 {
-                    _voteLastWritten = File.GetLastWriteTime(_voteFile);
+                    _voteLastWritten = File.GetLastWriteTime(voteFile);
 
-                    var text = File.ReadAllText(_voteFile);
+                    var text = File.ReadAllText(voteFile);
                     Votes = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text) ?? new Dictionary<string, UserVote>();
 
                     Plugin.Log.Info("Update done.");
@@ -166,9 +170,8 @@ namespace SongPlayHistory
             {
                 if (Records.Count > 0)
                 {
-                    // This can be done synchronously because the overhead is small. (400 ms / 15 MB, 60 ms / 1 MB)
                     var serialized = JsonConvert.SerializeObject(Records, Formatting.Indented);
-                    File.WriteAllText(_dataFile, serialized);
+                    File.WriteAllText(DataFile, serialized);
                 }
             }
             catch (Exception ex) // IOException, JsonException
@@ -181,7 +184,7 @@ namespace SongPlayHistory
         {
             var configFile = Path.Combine(Environment.CurrentDirectory, "UserData", $"{Plugin.Name}.json");
 
-            if (File.Exists(configFile) && !File.Exists(_dataFile))
+            if (File.Exists(configFile) && !File.Exists(DataFile))
             {
                 // Migrate if any old records exist.
                 var config = JObject.Parse(File.ReadAllText(configFile));
@@ -192,10 +195,10 @@ namespace SongPlayHistory
                     SaveRecordsToFile();
                 }
             }
-            else if (File.Exists(_dataFile))
+            else if (File.Exists(DataFile))
             {
                 // Read previous data from a data file.
-                var text = File.ReadAllText(_dataFile);
+                var text = File.ReadAllText(DataFile);
                 try
                 {
                     Records = JsonConvert.DeserializeObject<Dictionary<string, IList<Record>>>(text);
@@ -210,7 +213,7 @@ namespace SongPlayHistory
                     Plugin.Log.Error(ex.ToString());
 
                     // Try to restore from a backup.
-                    var backup = new FileInfo(Path.ChangeExtension(_dataFile, ".bak"));
+                    var backup = new FileInfo(Path.ChangeExtension(DataFile, ".bak"));
                     if (backup.Exists && backup.Length > 0)
                     {
                         Plugin.Log.Info("Restoring from a backup...");
@@ -235,18 +238,18 @@ namespace SongPlayHistory
 
         public static void BackupRecords()
         {
-            if (!File.Exists(_dataFile))
+            if (!File.Exists(DataFile))
                 return;
 
-            var backupFile = Path.ChangeExtension(_dataFile, ".bak");
+            var backupFile = Path.ChangeExtension(DataFile, ".bak");
             try
             {
                 if (File.Exists(backupFile))
                 {
                     // Compare file sizes instead of the last modified.
-                    if (new FileInfo(_dataFile).Length > new FileInfo(backupFile).Length)
+                    if (new FileInfo(DataFile).Length > new FileInfo(backupFile).Length)
                     {
-                        File.Copy(_dataFile, backupFile, true);
+                        File.Copy(DataFile, backupFile, true);
                     }
                     else
                     {
@@ -255,7 +258,7 @@ namespace SongPlayHistory
                 }
                 else
                 {
-                    File.Copy(_dataFile, backupFile);
+                    File.Copy(DataFile, backupFile);
                 }
             }
             catch (IOException ex)
