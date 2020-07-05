@@ -20,16 +20,16 @@ namespace SongPlayHistory.UnitTest
         }
 
         [Fact]
-        public void ReadOrMigrateRecords_HasNoDataFile()
+        public void InitializeRecords_HasNoDataFile()
         {
-            SPHModel.ReadOrMigrateRecords();
+            SPHModel.InitializeRecords();
 
             Assert.False(File.Exists(SPHModel.DataFile));
             Assert.True(SPHModel.Records.Count == 0);
         }
 
         [Fact]
-        public void ReadOrMigrateRecords_ReadData()
+        public void InitializeRecords_ReadData()
         {
             var records = new Dictionary<string, IList<Record>>();
             records.Add("level1", new List<Record> { new Record() });
@@ -38,7 +38,7 @@ namespace SongPlayHistory.UnitTest
             var serialized = JsonConvert.SerializeObject(records);
             File.WriteAllText(SPHModel.DataFile, $"{{\"Scores\":{serialized}}}");
 
-            SPHModel.ReadOrMigrateRecords(); // Why NullReferenceException?
+            SPHModel.InitializeRecords(); // Why NullReferenceException?
 
             Assert.True(File.Exists(SPHModel.DataFile));
             Assert.True(SPHModel.Records.Count == 2);

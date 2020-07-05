@@ -16,8 +16,8 @@ namespace SongPlayHistory.HarmonyPatches
 
         public static bool Prepare()
         {
-            _thumbsUp ??= LoadSpriteFromResource($"{Plugin.Name}.Assets.ThumbsUp.png");
-            _thumbsDown ??= LoadSpriteFromResource($"{Plugin.Name}.Assets.ThumbsDown.png");
+            _thumbsUp ??= LoadSpriteFromResource($"SongPlayHistory.Assets.ThumbsUp.png");
+            _thumbsDown ??= LoadSpriteFromResource($"SongPlayHistory.Assets.ThumbsDown.png");
 
             return SPHModel.ScanVoteData();
         }
@@ -72,7 +72,7 @@ namespace SongPlayHistory.HarmonyPatches
 
         public static void OnUnpatch()
         {
-            // TableCells are re-used, so manually destroy what we created.
+            // TableCells are re-used, so manually destroy what we've created.
             foreach (var image in Resources.FindObjectsOfTypeAll<Image>())
             {
                 if (image.name == "Vote")

@@ -13,7 +13,6 @@ namespace SongPlayHistory
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
     {
-        public const string Name = "SongPlayHistory";
         public const string HarmonyId = "com.github.swift-kim.SongPlayHistory";
 
         public static Logger Log { get; private set; }
@@ -26,15 +25,20 @@ namespace SongPlayHistory
             Log = logger;
             _harmony = new Harmony(HarmonyId);
 
-            SPHModel.ReadOrMigrateRecords();
             PluginConfig.Instance = conf.Generated<PluginConfig>();
+            BSMLSettings.instance.AddSettingsMenu("Song Play History", $"SongPlayHistory.Views.Settings.bsml", SettingsController.instance);
+
+            SPHModel.InitializeRecords();
         }
 
         [OnStart]
         public void OnStart()
         {
-            BS_Utils.Utilities.BSEvents.OnLoad();
-            BS_Utils.Utilities.BSEvents.menuSceneLoadedFresh += OnMenuLoadedFresh;
+            // Init after the menu scene is loaded.
+            BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh += (o) =>
+            {
+                _ = new UnityEngine.GameObject(nameof(SPHController)).AddComponent<SPHController>();
+            };
 
             ApplyHarmonyPatches(PluginConfig.Instance.ShowVotes);
         }
@@ -43,12 +47,6 @@ namespace SongPlayHistory
         public void OnExit()
         {
             SPHModel.BackupRecords();
-        }
-
-        private void OnMenuLoadedFresh()
-        {
-            BSMLSettings.instance.AddSettingsMenu("Song Play History", $"{Name}.Views.Settings.bsml", SettingsController.instance);
-            SPHController.OnLoad();
         }
 
         public static void ApplyHarmonyPatches(bool enabled)
@@ -65,7 +63,6 @@ namespace SongPlayHistory
                     Log.Info("Removing Harmony patches...");
                     _harmony.UnpatchAll(HarmonyId);
 
-                    // Do clean-up manually.
                     SetDataFromLevelAsync.OnUnpatch();
                 }
             }

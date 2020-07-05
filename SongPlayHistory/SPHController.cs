@@ -14,14 +14,6 @@ namespace SongPlayHistory
         private SPHUI _pluginUI;
         private bool _isPractice;
 
-        internal static void OnLoad()
-        {
-            if (Instance != null)
-                return;
-
-            _ = new GameObject(nameof(SPHController)).AddComponent<SPHController>();
-        }
-
         #region MonoBehaviour Messages
         /// <summary>
         /// Only ever called once, mainly used to initialize variables.
@@ -31,6 +23,7 @@ namespace SongPlayHistory
             if (Instance != null)
                 Destroy(Instance.gameObject);
 
+            DontDestroyOnLoad(this);
             Instance = this;
         }
 
@@ -80,6 +73,7 @@ namespace SongPlayHistory
         /// </summary>
         private void OnDestroy()
         {
+            Instance = null;
         }
         #endregion
 
