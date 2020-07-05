@@ -36,4 +36,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.2.2")]
 
 // Enable testing internal methods.
-[assembly: InternalsVisibleTo("SongPlayHistory.Test")]
+[assembly: InternalsVisibleTo("SongPlayHistory.UnitTest")]

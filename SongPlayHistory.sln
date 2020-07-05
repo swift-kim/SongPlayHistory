@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SongPlayHistory", "SongPlayHistory\SongPlayHistory.csproj", "{A27CE832-9835-494F-BCD9-1D8A4A0F90ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SongPlayHistory.Test", "SongPlayHistory.Test\SongPlayHistory.Test.csproj", "{AC3D1E95-F875-426B-A687-316F38D6FECD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SongPlayHistory.UnitTest", "SongPlayHistory.UnitTest\SongPlayHistory.UnitTest.csproj", "{9C2AE911-BA20-49F2-B61C-9581DEAD962A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{A27CE832-9835-494F-BCD9-1D8A4A0F90ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A27CE832-9835-494F-BCD9-1D8A4A0F90ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A27CE832-9835-494F-BCD9-1D8A4A0F90ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AC3D1E95-F875-426B-A687-316F38D6FECD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AC3D1E95-F875-426B-A687-316F38D6FECD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AC3D1E95-F875-426B-A687-316F38D6FECD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AC3D1E95-F875-426B-A687-316F38D6FECD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C2AE911-BA20-49F2-B61C-9581DEAD962A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C2AE911-BA20-49F2-B61C-9581DEAD962A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C2AE911-BA20-49F2-B61C-9581DEAD962A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C2AE911-BA20-49F2-B61C-9581DEAD962A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
