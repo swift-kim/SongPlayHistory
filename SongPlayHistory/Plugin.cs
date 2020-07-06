@@ -15,7 +15,7 @@ namespace SongPlayHistory
     {
         public const string HarmonyId = "com.github.swift-kim.SongPlayHistory";
 
-        public static Logger Log { get; private set; }
+        public static Logger Log { get; internal set; }
 
         private static Harmony _harmony;
 

@@ -98,7 +98,7 @@ namespace SongPlayHistory
             // Save to a file. We do this synchronously because the overhead is small. (400 ms / 15 MB, 60 ms / 1 MB)
             SaveRecordsToFile();
 
-            Plugin.Log.Info($"Saved a new record {difficulty} ({result.modifiedScore}).");
+            Plugin.Log?.Info($"Saved a new record {difficulty} ({result.modifiedScore}).");
         }
 
         private static Param ModsToParam(GameplayModifiers mods)
@@ -126,7 +126,7 @@ namespace SongPlayHistory
             var stat = statsList?.FirstOrDefault(x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
             if (stat == null)
             {
-                Plugin.Log.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
+                Plugin.Log?.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
                 return -1;
             }
             return stat.playCount;
@@ -136,11 +136,11 @@ namespace SongPlayHistory
         {
             var voteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
 
-            Plugin.Log.Info($"Scanning {Path.GetFileName(voteFile)}...");
+            Plugin.Log?.Info($"Scanning {Path.GetFileName(voteFile)}...");
 
             if (!File.Exists(voteFile))
             {
-                Plugin.Log.Warn("The file doesn't exist.");
+                Plugin.Log?.Warn("The file doesn't exist.");
                 return false;
             }
             try
@@ -152,14 +152,14 @@ namespace SongPlayHistory
                     var text = File.ReadAllText(voteFile);
                     Votes = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text) ?? new Dictionary<string, UserVote>();
 
-                    Plugin.Log.Info("Update done.");
+                    Plugin.Log?.Info("Update done.");
                 }
 
                 return true;
             }
             catch (Exception ex) // IOException, JsonException
             {
-                Plugin.Log.Error(ex.ToString());
+                Plugin.Log?.Error(ex.ToString());
                 return false;
             }
         }
@@ -176,7 +176,7 @@ namespace SongPlayHistory
             }
             catch (Exception ex) // IOException, JsonException
             {
-                Plugin.Log.Error(ex.ToString());
+                Plugin.Log?.Error(ex.ToString());
             }
         }
 
@@ -201,13 +201,13 @@ namespace SongPlayHistory
             catch (JsonException ex)
             {
                 // The data file is corrupted.
-                Plugin.Log.Error(ex.ToString());
+                Plugin.Log?.Error(ex.ToString());
 
                 // Try to restore from a backup.
                 var backup = new FileInfo(Path.ChangeExtension(DataFile, ".bak"));
                 if (backup.Exists && backup.Length > 0)
                 {
-                    Plugin.Log.Info("Restoring from a backup...");
+                    Plugin.Log?.Info("Restoring from a backup...");
                     text = File.ReadAllText(backup.FullName);
 
                     Records = JsonConvert.DeserializeObject<Dictionary<string, IList<Record>>>(text);
@@ -243,7 +243,7 @@ namespace SongPlayHistory
                     }
                     else
                     {
-                        Plugin.Log.Info("Nothing to backup.");
+                        Plugin.Log?.Info("Nothing to backup.");
                     }
                 }
                 else
@@ -253,7 +253,7 @@ namespace SongPlayHistory
             }
             catch (IOException ex)
             {
-                Plugin.Log.Error(ex.ToString());
+                Plugin.Log?.Error(ex.ToString());
             }
         }
     }

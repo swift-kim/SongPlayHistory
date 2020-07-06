@@ -98,7 +98,7 @@ namespace SongPlayHistory.HarmonyPatches
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error("Error while loading a resource.\n" + ex.ToString());
+                Plugin.Log?.Error("Error while loading a resource.\n" + ex.ToString());
                 return null;
             }
         }
