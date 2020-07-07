@@ -184,9 +184,7 @@ namespace SongPlayHistory
         {
             // We don't anymore support migrating old records from a config file.
             if (!File.Exists(DataFile))
-            {
                 return;
-            }
 
             // Read records from a data file.
             var text = File.ReadAllText(DataFile);
