@@ -164,7 +164,7 @@ namespace SongPlayHistory
             }
         }
 
-        private static void SaveRecordsToFile()
+        internal static void SaveRecordsToFile()
         {
             try
             {

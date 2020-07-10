@@ -7,19 +7,23 @@ using Xunit.Abstractions;
 
 namespace SongPlayHistory.UnitTest
 {
+    /// <summary>
+    /// Unit tests for static file I/O methods in <see cref="SPHModel"/>.
+    /// Only general non-Unity-related methods can be tested.
+    /// It is not allowed to access any Unity class from a standalone test runner.
+    /// </summary>
     public class SPHModelTest
     {
-        public readonly string UserDataDir = Path.Combine(Environment.CurrentDirectory, "UserData");
-
         public SPHModelTest(ITestOutputHelper output)
         {
             Plugin.Log = new TestLogger() { Output = output };
 
-            if (Directory.Exists(UserDataDir))
+            var userDataDir = Path.Combine(Environment.CurrentDirectory, "UserData");
+            if (Directory.Exists(userDataDir))
             {
-                Directory.Delete(UserDataDir, true);
+                Directory.Delete(userDataDir, true);
             }
-            Directory.CreateDirectory(UserDataDir);
+            Directory.CreateDirectory(userDataDir);
         }
 
         [Fact]
@@ -35,8 +39,8 @@ namespace SongPlayHistory.UnitTest
         public void InitializeRecords_ReadData()
         {
             var records = new Dictionary<string, IList<Record>>();
-            records.Add("level1", new List<Record> { new Record() });
-            records.Add("level2", new List<Record> { new Record(), new Record() });
+            records.Add("Level1", new List<Record> { new Record() });
+            records.Add("Level2", new List<Record> { new Record(), new Record() });
 
             var serialized = JsonConvert.SerializeObject(records);
             File.WriteAllText(SPHModel.DataFile, serialized);
@@ -45,8 +49,8 @@ namespace SongPlayHistory.UnitTest
 
             Assert.True(File.Exists(SPHModel.DataFile));
             Assert.True(SPHModel.Records.Count == 2);
-            Assert.True(SPHModel.Records["level1"].Count == 1);
-            Assert.True(SPHModel.Records["level2"].Count == 2);
+            Assert.True(SPHModel.Records["Level1"].Count == 1);
+            Assert.True(SPHModel.Records["Level2"].Count == 2);
         }
 
         [Fact]
@@ -75,8 +79,8 @@ namespace SongPlayHistory.UnitTest
             File.WriteAllText(SPHModel.DataFile, "NOT_A_VALID_JSON");
 
             var records = new Dictionary<string, IList<Record>>();
-            records.Add("level1", new List<Record> { new Record() });
-            records.Add("level2", new List<Record> { new Record(), new Record() });
+            records.Add("Level1", new List<Record> { new Record() });
+            records.Add("Level2", new List<Record> { new Record(), new Record() });
 
             var serialized = JsonConvert.SerializeObject(records);
             var backupFile = Path.ChangeExtension(SPHModel.DataFile, ".bak");
@@ -84,9 +88,42 @@ namespace SongPlayHistory.UnitTest
 
             SPHModel.InitializeRecords();
 
-            Assert.True(File.Exists(SPHModel.DataFile));
             Assert.True(File.Exists(backupFile));
             Assert.True(SPHModel.Records.Count == 2);
+        }
+
+        [Fact]
+        public void InitializeRecords_FailToRestoreFromBackup()
+        {
+            File.WriteAllText(SPHModel.DataFile, string.Empty);
+
+            var backupFile = Path.ChangeExtension(SPHModel.DataFile, ".bak");
+            File.WriteAllText(backupFile, string.Empty);
+
+            SPHModel.InitializeRecords();
+
+            Assert.True(SPHModel.Records.Count == 0);
+        }
+
+        [Fact]
+        public void SaveRecordsToFile_WriteData()
+        {
+            var records = SPHModel.Records = new Dictionary<string, IList<Record>>();
+
+            SPHModel.SaveRecordsToFile();
+
+            Assert.False(File.Exists(SPHModel.DataFile));
+
+            records.Add("Level1", new List<Record> { new Record() });
+            records.Add("Level2", new List<Record> { new Record(), new Record() });
+
+            SPHModel.SaveRecordsToFile();
+
+            Assert.True(File.Exists(SPHModel.DataFile));
+
+            var text = File.ReadAllText(SPHModel.DataFile);
+            Assert.Contains("Level1", text);
+            Assert.Contains("Level2", text);
         }
 
         [Fact]
@@ -96,7 +133,7 @@ namespace SongPlayHistory.UnitTest
             File.WriteAllText(backupFile, string.Empty);
 
             var records = new Dictionary<string, IList<Record>>();
-            records.Add("level1", new List<Record> { new Record() });
+            records.Add("Level1", new List<Record> { new Record() });
 
             var serialized = JsonConvert.SerializeObject(records);
             File.WriteAllText(SPHModel.DataFile, serialized);
@@ -114,7 +151,7 @@ namespace SongPlayHistory.UnitTest
             File.WriteAllText(SPHModel.DataFile, string.Empty);
 
             var records = new Dictionary<string, IList<Record>>();
-            records.Add("level1", new List<Record> { new Record() });
+            records.Add("Level1", new List<Record> { new Record() });
 
             var serialized = JsonConvert.SerializeObject(records);
             var backupFile = Path.ChangeExtension(SPHModel.DataFile, ".bak");

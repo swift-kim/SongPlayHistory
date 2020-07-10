@@ -3,7 +3,7 @@ using Xunit.Abstractions;
 
 namespace SongPlayHistory.UnitTest
 {
-    public class TestLogger : Logger
+    internal class TestLogger : Logger
     {
         public ITestOutputHelper Output { get; set; }
 
