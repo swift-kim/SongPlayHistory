@@ -57,7 +57,7 @@ namespace SongPlayHistory
                     var param = ConcatParam((Param)r.Param);
                     if (param.Length == 0 && r.RawScore != r.ModifiedScore)
                     {
-                        param = "N/A";
+                        param = "?!";
                     }
                     var notesRemaining = beatmap.beatmapData.notesCount - r.LastNote;
 
