@@ -24,10 +24,13 @@ namespace SongPlayHistory.UnitTest
                 Directory.Delete(userDataDir, true);
             }
             Directory.CreateDirectory(userDataDir);
+
+            SPHModel.Records.Clear();
+            SPHModel.Votes.Clear();
         }
 
         [Fact]
-        public void InitializeRecords_HasNoDataFile()
+        public void InitializeRecords_DataFileNotExist()
         {
             SPHModel.InitializeRecords();
 
@@ -54,7 +57,7 @@ namespace SongPlayHistory.UnitTest
         }
 
         [Fact]
-        public void InitializeRecords_HasEmptyDataNoBackup()
+        public void InitializeRecords_EmptyDataNoBackup()
         {
             File.WriteAllText(SPHModel.DataFile, string.Empty);
 
@@ -64,7 +67,7 @@ namespace SongPlayHistory.UnitTest
         }
 
         [Fact]
-        public void InitializeRecords_HasInvalidDataNoBackup()
+        public void InitializeRecords_InvalidDataNoBackup()
         {
             File.WriteAllText(SPHModel.DataFile, "NOT_A_VALID_JSON");
 
@@ -160,6 +163,53 @@ namespace SongPlayHistory.UnitTest
             SPHModel.BackupRecords();
 
             Assert.True(new FileInfo(SPHModel.DataFile).Length < new FileInfo(backupFile).Length);
+        }
+
+        [Fact]
+        public void ScanVoteData_FileNotExist()
+        {
+            Assert.False(SPHModel.ScanVoteData());
+            Assert.True(SPHModel.Votes.Count == 0);
+        }
+
+        [Fact]
+        public void ScanVoteData_EmptyData()
+        {
+            File.WriteAllText(SPHModel.VoteFile, string.Empty);
+
+            Assert.True(SPHModel.ScanVoteData());
+            Assert.True(SPHModel.Votes.Count == 0);
+        }
+
+        [Fact]
+        public void ScanVoteData_InvalidData()
+        {
+            File.WriteAllText(SPHModel.VoteFile, "NOT_A_VALID_JSON");
+
+            Assert.False(SPHModel.ScanVoteData());
+            Assert.True(SPHModel.Votes.Count == 0);
+        }
+
+        [Fact]
+        public void ScanVoteData_FileUpdated()
+        {
+            var votes = new Dictionary<string, UserVote>();
+            votes.Add("Level1", new UserVote() { key = "1111", voteType = "Upvote" });
+            votes.Add("Level2", new UserVote() { key = "2222", voteType = "Downvote" });
+
+            var serialized = JsonConvert.SerializeObject(votes);
+            File.WriteAllText(SPHModel.VoteFile, serialized);
+
+            Assert.True(SPHModel.ScanVoteData());
+            Assert.True(SPHModel.Votes.Count == 2);
+
+            votes.Add("Level3", new UserVote() { key = "3333", voteType = "Upvote" });
+
+            serialized = JsonConvert.SerializeObject(votes);
+            File.WriteAllText(SPHModel.VoteFile, serialized);
+
+            Assert.True(SPHModel.ScanVoteData());
+            Assert.True(SPHModel.Votes.Count == 3);
         }
     }
 }

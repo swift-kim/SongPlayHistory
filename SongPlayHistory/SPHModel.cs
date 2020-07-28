@@ -45,6 +45,7 @@ namespace SongPlayHistory
     internal static class SPHModel
     {
         public static readonly string DataFile = Path.Combine(Environment.CurrentDirectory, "UserData", "SongPlayData.json");
+        public static readonly string VoteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
 
         public static Dictionary<string, IList<Record>> Records { get; set; } = new Dictionary<string, IList<Record>>();
         public static Dictionary<string, UserVote> Votes { get; private set; } = new Dictionary<string, UserVote>();
@@ -134,22 +135,20 @@ namespace SongPlayHistory
 
         public static bool ScanVoteData()
         {
-            var voteFile = Path.Combine(Environment.CurrentDirectory, "UserData", "votedSongs.json");
+            Plugin.Log?.Info($"Scanning {Path.GetFileName(VoteFile)}...");
 
-            Plugin.Log?.Info($"Scanning {Path.GetFileName(voteFile)}...");
-
-            if (!File.Exists(voteFile))
+            if (!File.Exists(VoteFile))
             {
                 Plugin.Log?.Warn("The file doesn't exist.");
                 return false;
             }
             try
             {
-                if (_voteLastWritten != File.GetLastWriteTime(voteFile))
+                if (_voteLastWritten != File.GetLastWriteTime(VoteFile))
                 {
-                    _voteLastWritten = File.GetLastWriteTime(voteFile);
+                    _voteLastWritten = File.GetLastWriteTime(VoteFile);
 
-                    var text = File.ReadAllText(voteFile);
+                    var text = File.ReadAllText(VoteFile);
                     Votes = JsonConvert.DeserializeObject<Dictionary<string, UserVote>>(text) ?? new Dictionary<string, UserVote>();
 
                     Plugin.Log?.Info("Update done.");
