@@ -29,6 +29,11 @@ namespace SongPlayHistory.HarmonyPatches
             TextMeshProUGUI ____songNameText,
             TextMeshProUGUI ____authorText)
         {
+            if (level == null || ____songNameText == null || ____authorText == null)
+            {
+                return;
+            }
+
             Image voteIcon = null;
             foreach (var image in __instance.GetComponentsInChildren<Image>())
             {
