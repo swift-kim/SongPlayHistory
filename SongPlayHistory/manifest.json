@@ -3,10 +3,10 @@
   "description": [
     "Track all your scores."
   ],
-  "gameVersion": "1.9.1",
+  "gameVersion": "1.11.0",
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "features": [],
   "links": {
     "project-home": "https://github.com/swift-kim/SongPlayHistory"
