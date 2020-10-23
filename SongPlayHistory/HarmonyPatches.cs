@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace SongPlayHistory.HarmonyPatches
+namespace SongPlayHistory
 {
     [HarmonyPatch(typeof(LevelListTableCell))]
     [HarmonyPatch("SetDataFromLevelAsync", new Type[] { typeof(IPreviewBeatmapLevel), typeof(bool) })]

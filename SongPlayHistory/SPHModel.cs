@@ -105,10 +105,10 @@ namespace SongPlayHistory
         private static Param ModsToParam(GameplayModifiers mods)
         {
             Param param = Param.None;
-            param |= mods.batteryEnergy ? Param.BatteryEnergy : 0;
+            param |= mods.energyType == GameplayModifiers.EnergyType.Battery ? Param.BatteryEnergy : 0;
             param |= mods.noFail ? Param.NoFail : 0;
             param |= mods.instaFail ? Param.InstaFail : 0;
-            param |= mods.noObstacles ? Param.NoObstacles : 0;
+            param |= mods.enabledObstacleType == GameplayModifiers.EnabledObstacleType.NoObstacles ? Param.NoObstacles : 0;
             param |= mods.noBombs ? Param.NoBombs : 0;
             param |= mods.fastNotes ? Param.FastNotes : 0;
             param |= mods.strictAngles ? Param.StrictAngles : 0;

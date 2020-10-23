@@ -4,7 +4,6 @@ using IPA;
 using IPA.Config;
 using IPA.Config.Stores;
 using IPA.Logging;
-using SongPlayHistory.HarmonyPatches;
 using System;
 using System.Reflection;
 
@@ -26,7 +25,7 @@ namespace SongPlayHistory
             _harmony = new Harmony(HarmonyId);
 
             PluginConfig.Instance = conf.Generated<PluginConfig>();
-            BSMLSettings.instance.AddSettingsMenu("Song Play History", $"SongPlayHistory.Views.Settings.bsml", SettingsController.instance);
+            BSMLSettings.instance.AddSettingsMenu("Song Play History", $"SongPlayHistory.Settings.bsml", SettingsController.instance);
 
             SPHModel.InitializeRecords();
         }
@@ -56,7 +55,8 @@ namespace SongPlayHistory
                 if (enabled && !Harmony.HasAnyPatches(HarmonyId))
                 {
                     Log.Info("Applying Harmony patches...");
-                    _harmony.PatchAll(Assembly.GetExecutingAssembly());
+                    // Disabled for now.
+                    //_harmony.PatchAll(Assembly.GetExecutingAssembly());
                 }
                 else if (!enabled && Harmony.HasAnyPatches(HarmonyId))
                 {

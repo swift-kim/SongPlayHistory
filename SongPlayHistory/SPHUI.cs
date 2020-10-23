@@ -20,31 +20,33 @@ namespace SongPlayHistory
 
         public SPHUI()
         {
+            _maxCombo = BeatSaberUI.LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
+            _highscore = BeatSaberUI.LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
+            _maxRank = BeatSaberUI.LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
+
             var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            var hiddenButton = UnityEngine.Object.Instantiate(playButton, BeatSaberUI.PlayerStatsContainer.transform);
-            (hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 70.0f);
+            var hiddenButton = UnityEngine.Object.Instantiate(playButton, BeatSaberUI.LevelStatsView.transform);
             hiddenButton.name = "HoverArea";
-            string[] gone = { "BG", "GlowContainer", "Stroke", "Text" };
-            foreach (var t in hiddenButton.GetComponentsInChildren<RectTransform>().Where(x => gone.Contains(x.name)))
+            (hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0f, 68f);
+            foreach (var image in hiddenButton.GetComponentsInChildren<ImageView>())
             {
-                UnityEngine.Object.Destroy(t.gameObject);
+                image.color = Color.clear;
             }
-            var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-            var hoverHintHolder = hiddenButton.GetComponentsInChildren<StackLayoutGroup>().First();
+            UnityEngine.Object.Destroy(hiddenButton.GetComponentInChildren<TextMeshProUGUI>());
+
+            var hoverHintHolder = hiddenButton.GetComponentInChildren<StackLayoutGroup>();
             _hoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
+            var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
             _hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
             _hoverHint.text = "";
-
-            _maxCombo = BeatSaberUI.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
-            _highscore = BeatSaberUI.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
-            _maxRank = BeatSaberUI.PlayerStatsContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
         }
 
         public void ShowRecords(IDifficultyBeatmap beatmap, List<Record> records)
         {
             if (records?.Count > 0)
             {
-                var maxScore = ScoreModel.MaxRawScoreForNumberOfNotes(beatmap.beatmapData.notesCount);
+                var notesCount = beatmap.beatmapData.cuttableNotesType;
+                var maxScore = ScoreModel.MaxRawScoreForNumberOfNotes(notesCount);
                 var builder = new StringBuilder(200);
 
                 // HoverHint max lines = 9
@@ -59,9 +61,9 @@ namespace SongPlayHistory
                     {
                         param = "?!";
                     }
-                    var notesRemaining = beatmap.beatmapData.notesCount - r.LastNote;
+                    var notesRemaining = notesCount - r.LastNote;
 
-                    builder.Append($"<size=3>{localDateTime.ToString("d")}</size>");
+                    builder.Append($"<size=3>{localDateTime:d}</size>");
                     builder.Append($"<size=4><color=#96ceb4ff> {r.ModifiedScore}</color></size>");
                     if (param.Length > 0)
                         builder.Append($"<size=2> {param}</size>");
@@ -118,35 +120,20 @@ namespace SongPlayHistory
         {
             if (_playCount == null)
             {
-                _playCount = UnityEngine.Object.Instantiate(_maxCombo, BeatSaberUI.PlayerStatsContainer.transform);
+                _playCount = UnityEngine.Object.Instantiate(_maxCombo, BeatSaberUI.LevelStatsView.transform);
                 _playCount.name = "PlayCount";
                 var playCountTitle = _playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
                 playCountTitle.SetText("Play Count");
 
-                // Resize and align center. These values may be changed later.
-                _maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, -2.0f, 17.0f);
-                _highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 15.0f, 17.0f);
-                _maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 32.0f, 16.0f);
-                _playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 48.0f, 16.0f);
+                float width = 17f;
+                _maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0f, width);
+                _highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width, width);
+                _maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width * 2, width);
+                _playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width * 3, width);
             }
 
             var playCountValue = _playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
             playCountValue.SetText(count > 0 ? count.ToString() : "-");
-        }
-
-        public void UnshowPlayCount()
-        {
-            if (_playCount != null)
-            {
-                UnityEngine.Object.Destroy(_playCount.gameObject);
-                _playCount = null;
-
-                // The MenuScene is not always reloaded on saving the config.
-                // In that case we have to manually restore original values.
-                _maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0.0f, 23.4f);
-                _highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 23.4f, 23.3f);
-                _maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 46.7f, 23.3f);
-            }
         }
     }
 }

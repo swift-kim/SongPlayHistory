@@ -35,7 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>References\Libs\0Harmony.dll</HintPath>
+      <HintPath>$(BeatSaberDir)\Libs\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(BeatSaberDir)\Libs\Newtonsoft.Json.dll</HintPath>
@@ -54,6 +54,14 @@
     <Reference Include="System.Xml" />
     <Reference Include="MainAssembly">
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Main.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="BeatmapCore">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatmapCore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GameplayCore">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="HMUI">
@@ -101,7 +109,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BeatSaberUI.cs" />
-    <Compile Include="HarmonyPatches\LevelListTableCell.cs" />
+    <Compile Include="HarmonyPatches.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="SPHController.cs" />
@@ -116,7 +124,7 @@
     <EmbeddedResource Include="manifest.json" />
     <EmbeddedResource Include="Assets\ThumbsUp.png" />
     <EmbeddedResource Include="Assets\ThumbsDown.png" />
-    <EmbeddedResource Include="Views\Settings.bsml" />
+    <EmbeddedResource Include="Settings.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--Build Targets-->

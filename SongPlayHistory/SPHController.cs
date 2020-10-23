@@ -32,8 +32,8 @@ namespace SongPlayHistory
         /// </summary>
         private void Start()
         {
-            var soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
-            soloFreePlayButton.onClick.AddListener(() =>
+            var soloButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloButton");
+            soloButton.onClick.AddListener(() =>
             {
                 // Fail fast when an error is encountered during initialization.
                 Initialize();
@@ -86,11 +86,10 @@ namespace SongPlayHistory
             BeatSaberUI.Initialize();
             _pluginUI = new SPHUI();
 
-            // Harmony can be used to patch StandardLevelDetailView.RefreshContent() but I'm too lazy to implement it.
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDifficultyChanged;
-            BeatSaberUI.LevelDetailViewController.didPresentContentEvent -= OnLevelDetailPresented;
-            BeatSaberUI.LevelDetailViewController.didPresentContentEvent += OnLevelDetailPresented;
+            BeatSaberUI.LevelDetailViewController.didChangeContentEvent -= OnContentChanged;
+            BeatSaberUI.LevelDetailViewController.didChangeContentEvent += OnContentChanged;
 
             // Don't use BSEvents.levelCleared and BSEvents.levelFailed as they are defective.
             BSEvents.gameSceneLoaded -= OnGameSceneLoaded;
@@ -108,7 +107,7 @@ namespace SongPlayHistory
             Refresh();
         }
 
-        private void OnLevelDetailPresented(StandardLevelDetailViewController _, StandardLevelDetailViewController.ContentType contentType)
+        private void OnContentChanged(StandardLevelDetailViewController _, StandardLevelDetailViewController.ContentType contentType)
         {
             if (contentType != StandardLevelDetailViewController.ContentType.Loading)
             {
@@ -157,10 +156,6 @@ namespace SongPlayHistory
                 if (PluginConfig.Instance.ShowPlayCounts)
                 {
                     _pluginUI.ShowPlayCount(SPHModel.GetPlayCount(beatmap));
-                }
-                else
-                {
-                    _pluginUI.UnshowPlayCount();
                 }
             }
             catch (Exception ex) // Any UnityException
