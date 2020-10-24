@@ -45,12 +45,19 @@ namespace SongPlayHistory
         {
             if (records?.Count > 0)
             {
+                List<Record> truncated = records.Take(10).ToList();
+
                 var notesCount = beatmap.beatmapData.cuttableNotesType;
                 var maxScore = ScoreModel.MaxRawScoreForNumberOfNotes(notesCount);
                 var builder = new StringBuilder(200);
 
-                // HoverHint max lines = 9
-                foreach (var r in records.Take(9))
+                static string Space(int len)
+                {
+                    var space = string.Concat(Enumerable.Repeat("_", len));
+                    return $"<size=1><color=#00000000>{space}</color></size>";
+                }
+
+                foreach (var r in truncated)
                 {
                     var localDateTime = DateTimeOffset.FromUnixTimeMilliseconds(r.Date).LocalDateTime;
                     var adjMaxScore = ScoreModel.MaxRawScoreForNumberOfNotes(r.LastNote);
@@ -63,20 +70,22 @@ namespace SongPlayHistory
                     }
                     var notesRemaining = notesCount - r.LastNote;
 
-                    builder.Append($"<size=3>{localDateTime:d}</size>");
-                    builder.Append($"<size=4><color=#96ceb4ff> {r.ModifiedScore}</color></size>");
+                    builder.Append(Space(truncated.Count - truncated.IndexOf(r) - 1));
+                    builder.Append($"<size=2.5><color=#1a252bff>{localDateTime:d}</color></size>");
+                    builder.Append($"<size=3.5><color=#0f4c75ff> {r.ModifiedScore}</color></size>");
                     if (param.Length > 0)
-                        builder.Append($"<size=2> {param}</size>");
-                    builder.Append($"<size=4><color=#ffcc5cff> {accuracy:0.00}%</color></size>");
+                        builder.Append($"<size=2><color=#1a252bff> {param}</color></size>");
+                    builder.Append($"<size=3.5><color=#368cc6ff> {accuracy:0.00}%</color></size>");
                     if (PluginConfig.Instance.ShowFailed)
                     {
                         if (r.LastNote == -1)
-                            builder.Append($"<size=3><color=#d0f5fcff> cleared</color></size>");
-                        else if (r.LastNote == 0) // old record (success, failed, or practice)
-                            builder.Append($"<size=3><color=#c7c7c7ff> unknown</color></size>");
+                            builder.Append($"<size=2.5><color=#1a252bff> cleared</color></size>");
+                        else if (r.LastNote == 0) // old record (success, fail, or practice)
+                            builder.Append($"<size=2.5><color=#584153ff> unknown</color></size>");
                         else
-                            builder.Append($"<size=3><color=#ff6f69ff> {notesRemaining} notes left</color></size>");
+                            builder.Append($"<size=2.5><color=#ff5722ff> +{notesRemaining} notes</color></size>");
                     }
+                    builder.Append(Space(truncated.IndexOf(r)));
                     builder.AppendLine();
                 }
 
