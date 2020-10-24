@@ -55,8 +55,7 @@ namespace SongPlayHistory
                 if (enabled && !Harmony.HasAnyPatches(HarmonyId))
                 {
                     Log.Info("Applying Harmony patches...");
-                    // Disabled for now.
-                    //_harmony.PatchAll(Assembly.GetExecutingAssembly());
+                    _harmony.PatchAll(Assembly.GetExecutingAssembly());
                 }
                 else if (!enabled && Harmony.HasAnyPatches(HarmonyId))
                 {
