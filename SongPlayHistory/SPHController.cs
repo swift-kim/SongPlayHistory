@@ -1,6 +1,7 @@
 ﻿using BS_Utils.Gameplay;
 using BS_Utils.Utilities;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -91,13 +92,15 @@ namespace SongPlayHistory
             BeatSaberUI.LevelDetailViewController.didChangeContentEvent -= OnContentChanged;
             BeatSaberUI.LevelDetailViewController.didChangeContentEvent += OnContentChanged;
 
-            // Don't use BSEvents.levelCleared and BSEvents.levelFailed as they are defective.
             BSEvents.gameSceneLoaded -= OnGameSceneLoaded;
             BSEvents.gameSceneLoaded += OnGameSceneLoaded;
+            BS_Utils.Plugin.LevelDidFinishEvent -= OnLevelFinished;
+            BS_Utils.Plugin.LevelDidFinishEvent += OnLevelFinished;
+            BS_Utils.Plugin.MultiLevelDidFinishEvent -= OnMultilevelFinished;
+            BS_Utils.Plugin.MultiLevelDidFinishEvent += OnMultilevelFinished;
+
             BeatSaberUI.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
             BeatSaberUI.ResultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
-            BeatSaberUI.ResultsViewController.restartButtonPressedEvent -= OnPlayResultDismiss;
-            BeatSaberUI.ResultsViewController.restartButtonPressedEvent += OnPlayResultDismiss;
 
             Plugin.Log?.Info("Initialization complete.");
         }
@@ -121,13 +124,14 @@ namespace SongPlayHistory
             _isPractice = practiceSettings != null;
         }
 
-        private void OnPlayResultDismiss(ResultsViewController resultsViewController)
+        private void OnLevelFinished(StandardLevelScenesTransitionSetupDataSO _, LevelCompletionResults result)
         {
-            if (_isPractice)
+            if (_isPractice || Gamemode.IsPartyActive)
+            {
                 return;
+            }
 
-            var result = resultsViewController.GetPrivateField<LevelCompletionResults>("_levelCompletionResults");
-            if (result.rawScore > 0)
+            if (result?.rawScore > 0)
             {
                 // Actually there's no way to know if any custom modifier was applied if the user failed a song.
                 var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
@@ -135,8 +139,16 @@ namespace SongPlayHistory
                 SPHModel.SaveRecord(beatmap, result, submissionDisabled);
             }
             Refresh();
+        }
 
-            // The user may have voted on this song.
+        private void OnMultilevelFinished(MultiplayerLevelScenesTransitionSetupDataSO _, LevelCompletionResults result, Dictionary<string, LevelCompletionResults> __)
+        {
+            OnLevelFinished(null, result);
+        }
+
+        private void OnPlayResultDismiss(ResultsViewController _)
+        {
+            // The user may have voted on this map.
             SPHModel.ScanVoteData();
             BeatSaberUI.ReloadSongList();
         }
@@ -147,7 +159,9 @@ namespace SongPlayHistory
 
             var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
             if (beatmap == null)
+            {
                 return;
+            }
 
             try
             {
