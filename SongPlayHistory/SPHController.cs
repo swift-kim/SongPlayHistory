@@ -87,22 +87,30 @@ namespace SongPlayHistory
             BeatSaberUI.Initialize();
             _pluginUI = new SPHUI();
 
-            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
-            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDifficultyChanged;
-            BeatSaberUI.LevelDetailViewController.didChangeContentEvent -= OnContentChanged;
-            BeatSaberUI.LevelDetailViewController.didChangeContentEvent += OnContentChanged;
-
-            BSEvents.gameSceneLoaded -= OnGameSceneLoaded;
-            BSEvents.gameSceneLoaded += OnGameSceneLoaded;
-            BS_Utils.Plugin.LevelDidFinishEvent -= OnLevelFinished;
-            BS_Utils.Plugin.LevelDidFinishEvent += OnLevelFinished;
-            BS_Utils.Plugin.MultiLevelDidFinishEvent -= OnMultilevelFinished;
-            BS_Utils.Plugin.MultiLevelDidFinishEvent += OnMultilevelFinished;
-
-            BeatSaberUI.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
-            BeatSaberUI.ResultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
+            UnsubscribeEvents();
+            SubscribeEvents();
 
             Plugin.Log?.Info("Initialization complete.");
+        }
+
+        internal void UnsubscribeEvents()
+        {
+            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
+            BeatSaberUI.LevelDetailViewController.didChangeContentEvent -= OnContentChanged;
+            BSEvents.gameSceneLoaded -= OnGameSceneLoaded;
+            BS_Utils.Plugin.LevelDidFinishEvent -= OnLevelFinished;
+            BS_Utils.Plugin.MultiLevelDidFinishEvent -= OnMultilevelFinished;
+            BeatSaberUI.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
+        }
+
+        private void SubscribeEvents()
+        {
+            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDifficultyChanged;
+            BeatSaberUI.LevelDetailViewController.didChangeContentEvent += OnContentChanged;
+            BSEvents.gameSceneLoaded += OnGameSceneLoaded;
+            BS_Utils.Plugin.LevelDidFinishEvent += OnLevelFinished;
+            BS_Utils.Plugin.MultiLevelDidFinishEvent += OnMultilevelFinished;
+            BeatSaberUI.ResultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
         }
 
         private void OnDifficultyChanged(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)

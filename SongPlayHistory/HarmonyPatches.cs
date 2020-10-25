@@ -27,7 +27,7 @@ namespace SongPlayHistory
             Image ____favoritesBadgeImage,
             TextMeshProUGUI ____songBpmText)
         {
-            if (float.TryParse(____songBpmText.text, out float bpm))
+            if (float.TryParse(____songBpmText?.text, out float bpm))
             {
                 ____songBpmText.text = bpm.ToString("0");
             }

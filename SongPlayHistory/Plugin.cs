@@ -18,6 +18,8 @@ namespace SongPlayHistory
 
         private static Harmony _harmony;
 
+        private SPHController _controller;
+
         [Init]
         public Plugin(Logger logger, Config conf)
         {
@@ -36,7 +38,11 @@ namespace SongPlayHistory
             // Init after the menu scene is loaded.
             BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh += (o) =>
             {
-                _ = new UnityEngine.GameObject(nameof(SPHController)).AddComponent<SPHController>();
+                if (_controller != null)
+                {
+                    _controller.UnsubscribeEvents();
+                }
+                _controller = new UnityEngine.GameObject(nameof(SPHController)).AddComponent<SPHController>();
             };
 
             ApplyHarmonyPatches(PluginConfig.Instance.ShowVotes);
