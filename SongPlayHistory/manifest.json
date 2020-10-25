@@ -1,7 +1,7 @@
 ﻿{
   "author": "peperoro",
   "description": [
-    "Track all your scores."
+    "A score tracker with simple in-game UI."
   ],
   "gameVersion": "1.12.2",
   "id": "SongPlayHistory",

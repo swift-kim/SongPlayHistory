@@ -130,20 +130,24 @@ namespace SongPlayHistory
             {
                 return;
             }
-
-            if (result?.rawScore > 0)
-            {
-                // Actually there's no way to know if any custom modifier was applied if the user failed a song.
-                var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
-                var submissionDisabled = ScoreSubmission.WasDisabled || ScoreSubmission.Disabled || ScoreSubmission.ProlongedDisabled;
-                SPHModel.SaveRecord(beatmap, result, submissionDisabled);
-            }
+            SaveRecord(result, false);
             Refresh();
         }
 
         private void OnMultilevelFinished(MultiplayerLevelScenesTransitionSetupDataSO _, LevelCompletionResults result, Dictionary<string, LevelCompletionResults> __)
         {
-            OnLevelFinished(null, result);
+            SaveRecord(result, true);
+        }
+
+        private void SaveRecord(LevelCompletionResults result, bool isMultiplayer)
+        {
+            if (result?.rawScore > 0)
+            {
+                // Actually there's no way to know if any custom modifier was applied if the user failed a song.
+                var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
+                var submissionDisabled = ScoreSubmission.WasDisabled || ScoreSubmission.Disabled || ScoreSubmission.ProlongedDisabled;
+                SPHModel.SaveRecord(beatmap, result, submissionDisabled, isMultiplayer);
+            }
         }
 
         private void OnPlayResultDismiss(ResultsViewController _)

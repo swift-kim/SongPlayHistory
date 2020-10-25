@@ -33,6 +33,7 @@ namespace SongPlayHistory
         NoArrows = 0x0400,
         GhostNotes = 0x0800,
         SubmissionDisabled = 0x10000,
+        Multiplayer = 0x20000,
     }
 
     internal class UserVote
@@ -68,7 +69,7 @@ namespace SongPlayHistory
             return new List<Record>();
         }
 
-        public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults result, bool submissionDisabled = false)
+        public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults result, bool submissionDisabled, bool isMultiplayer)
         {
             // We now keep failed records.
             var cleared = result.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
@@ -76,6 +77,7 @@ namespace SongPlayHistory
             // If submissionDisabled = true, we assume custom gameplay modifiers are applied.
             var param = ModsToParam(result.gameplayModifiers);
             param |= submissionDisabled ? Param.SubmissionDisabled : 0;
+            param |= isMultiplayer ? Param.Multiplayer : 0;
 
             var record = new Record
             {

@@ -73,9 +73,11 @@ namespace SongPlayHistory
                     builder.Append(Space(truncated.Count - truncated.IndexOf(r) - 1));
                     builder.Append($"<size=2.5><color=#1a252bff>{localDateTime:d}</color></size>");
                     builder.Append($"<size=3.5><color=#0f4c75ff> {r.ModifiedScore}</color></size>");
-                    if (param.Length > 0)
-                        builder.Append($"<size=2><color=#1a252bff> {param}</color></size>");
                     builder.Append($"<size=3.5><color=#368cc6ff> {accuracy:0.00}%</color></size>");
+                    if (param.Length > 0)
+                    {
+                        builder.Append($"<size=2><color=#1a252bff> {param}</color></size>");
+                    }
                     if (PluginConfig.Instance.ShowFailed)
                     {
                         if (r.LastNote == -1)
@@ -104,6 +106,7 @@ namespace SongPlayHistory
 
             var mods = new List<string>();
             if (param.HasFlag(Param.SubmissionDisabled)) mods.Add("??");
+            if (param.HasFlag(Param.Multiplayer)) mods.Add("MULTI");
             if (param.HasFlag(Param.DisappearingArrows)) mods.Add("DA");
             if (param.HasFlag(Param.GhostNotes)) mods.Add("GN");
             if (param.HasFlag(Param.FasterSong)) mods.Add("FS");
