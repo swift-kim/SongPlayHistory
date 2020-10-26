@@ -34,8 +34,7 @@ namespace SongPlayHistory
             }
             UnityEngine.Object.Destroy(hiddenButton.GetComponentInChildren<TextMeshProUGUI>());
 
-            var hoverHintHolder = hiddenButton.GetComponentInChildren<StackLayoutGroup>();
-            _hoverHint = hoverHintHolder.gameObject.AddComponent<HoverHint>();
+            _hoverHint = hiddenButton.GetComponentInChildren<HoverHint>();
             var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
             _hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
             _hoverHint.text = "";
