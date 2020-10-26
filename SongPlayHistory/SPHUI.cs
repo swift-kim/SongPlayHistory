@@ -1,4 +1,5 @@
-﻿using BS_Utils.Utilities;
+﻿using BeatSaberMarkupLanguage;
+using BS_Utils.Utilities;
 using HMUI;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ namespace SongPlayHistory
             {
                 image.color = Color.clear;
             }
-            UnityEngine.Object.Destroy(hiddenButton.GetComponentInChildren<TextMeshProUGUI>());
+            hiddenButton.SetButtonText("");
 
             _hoverHint = hiddenButton.GetComponentInChildren<HoverHint>();
             var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();

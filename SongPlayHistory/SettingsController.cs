@@ -42,7 +42,7 @@ namespace SongPlayHistory
         [UIAction("#apply")]
         public void OnApply()
         {
-            Plugin.ApplyHarmonyPatches(ShowVotes);
+            Plugin.Instance?.ApplyHarmonyPatches(ShowVotes);
         }
     }
 }

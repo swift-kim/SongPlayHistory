@@ -76,6 +76,12 @@ namespace SongPlayHistory
                 return;
             }
 
+            // Cancelled?
+            if (result.levelEndStateType == LevelCompletionResults.LevelEndStateType.None)
+            {
+                return;
+            }
+
             // We now keep failed records.
             var cleared = result.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
 

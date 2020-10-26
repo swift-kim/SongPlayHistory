@@ -22,7 +22,14 @@ namespace SongPlayHistory
         private void Awake()
         {
             if (Instance != null)
+            {
+                try
+                {
+                    Instance.UnsubscribeEvents();
+                }
+                catch { }
                 Destroy(Instance.gameObject);
+            }
 
             DontDestroyOnLoad(this);
             Instance = this;
@@ -34,7 +41,7 @@ namespace SongPlayHistory
         private void Start()
         {
             var soloButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloButton");
-            soloButton.onClick.AddListener(() =>
+            soloButton?.onClick.AddListener(() =>
             {
                 // Fail fast when an error is encountered during initialization.
                 Initialize();
@@ -149,7 +156,7 @@ namespace SongPlayHistory
 
         private void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults result, bool isMultiplayer)
         {
-            if (result?.rawScore > 0 && beatmap != null)
+            if (result?.rawScore > 0)
             {
                 // Actually there's no way to know if any custom modifier was applied if the user failed a song.
                 var submissionDisabled = ScoreSubmission.WasDisabled || ScoreSubmission.Disabled || ScoreSubmission.ProlongedDisabled;
