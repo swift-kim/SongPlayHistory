@@ -71,6 +71,11 @@ namespace SongPlayHistory
 
         public static void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults result, bool submissionDisabled, bool isMultiplayer)
         {
+            if (beatmap == null || result == null)
+            {
+                return;
+            }
+
             // We now keep failed records.
             var cleared = result.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
 

@@ -132,27 +132,26 @@ namespace SongPlayHistory
             _isPractice = practiceSettings != null;
         }
 
-        private void OnLevelFinished(StandardLevelScenesTransitionSetupDataSO _, LevelCompletionResults result)
+        private void OnLevelFinished(StandardLevelScenesTransitionSetupDataSO scene, LevelCompletionResults result)
         {
             if (_isPractice || Gamemode.IsPartyActive)
             {
                 return;
             }
-            SaveRecord(result, false);
+            SaveRecord(scene?.difficultyBeatmap, result, false);
             Refresh();
         }
 
-        private void OnMultilevelFinished(MultiplayerLevelScenesTransitionSetupDataSO _, LevelCompletionResults result, Dictionary<string, LevelCompletionResults> __)
+        private void OnMultilevelFinished(MultiplayerLevelScenesTransitionSetupDataSO scene, LevelCompletionResults result, Dictionary<string, LevelCompletionResults> __)
         {
-            SaveRecord(result, true);
+            SaveRecord(scene?.difficultyBeatmap, result, true);
         }
 
-        private void SaveRecord(LevelCompletionResults result, bool isMultiplayer)
+        private void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults result, bool isMultiplayer)
         {
-            if (result?.rawScore > 0)
+            if (result?.rawScore > 0 && beatmap != null)
             {
                 // Actually there's no way to know if any custom modifier was applied if the user failed a song.
-                var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
                 var submissionDisabled = ScoreSubmission.WasDisabled || ScoreSubmission.Disabled || ScoreSubmission.ProlongedDisabled;
                 SPHModel.SaveRecord(beatmap, result, submissionDisabled, isMultiplayer);
             }
