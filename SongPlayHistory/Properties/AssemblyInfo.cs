@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 [assembly: Guid("00018988-0f10-451a-aa47-10d783cefbdb")]
 
-[assembly: AssemblyVersion("1.4.1")]
-[assembly: AssemblyFileVersion("1.4.1")]
+[assembly: AssemblyVersion("1.4.2")]
+[assembly: AssemblyFileVersion("1.4.2")]
 
 [assembly: InternalsVisibleTo("SongPlayHistory.UnitTest")]
