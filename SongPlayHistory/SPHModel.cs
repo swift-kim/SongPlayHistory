@@ -136,7 +136,11 @@ namespace SongPlayHistory
         {
             var playerDataModel = BeatSaberUI.LevelDetailViewController.GetPrivateField<PlayerDataModel>("_playerDataModel");
             var statsList = playerDataModel.playerData.levelsStatsData;
-            var stat = statsList?.FirstOrDefault(x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
+            if (statsList == null)
+            {
+                Plugin.Log?.Warn($"The player stats data was not found.");
+            }
+            var stat = statsList.FirstOrDefault(x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
             if (stat == null)
             {
                 Plugin.Log?.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
@@ -195,7 +199,9 @@ namespace SongPlayHistory
         {
             // We don't anymore support migrating old records from a config file.
             if (!File.Exists(DataFile))
+            {
                 return;
+            }
 
             // Read records from a data file.
             var text = File.ReadAllText(DataFile);
@@ -238,7 +244,9 @@ namespace SongPlayHistory
         public static void BackupRecords()
         {
             if (!File.Exists(DataFile))
+            {
                 return;
+            }
 
             var backupFile = Path.ChangeExtension(DataFile, ".bak");
             try

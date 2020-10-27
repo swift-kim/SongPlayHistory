@@ -1,10 +1,12 @@
 ﻿using BeatSaberMarkupLanguage.Settings;
+using BS_Utils.Gameplay;
 using HarmonyLib;
 using IPA;
 using IPA.Config;
 using IPA.Config.Stores;
 using IPA.Logging;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace SongPlayHistory
@@ -18,6 +20,7 @@ namespace SongPlayHistory
         public static Logger Log { get; internal set; }
 
         private readonly Harmony _harmony;
+        private bool _isPractice;
 
         [Init]
         public Plugin(Logger logger, Config config)
@@ -35,9 +38,14 @@ namespace SongPlayHistory
         [OnStart]
         public void OnStart()
         {
+            BS_Utils.Utilities.BSEvents.gameSceneLoaded += OnGameSceneLoaded;
+            BS_Utils.Plugin.LevelDidFinishEvent += OnLevelFinished;
+            BS_Utils.Plugin.MultiLevelDidFinishEvent += OnMultilevelFinished;
+
             // Init after the menu scene is loaded.
             BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh += (o) =>
             {
+                Log.Info("The menu scene was loaded.");
                 _ = new UnityEngine.GameObject(nameof(SPHController)).AddComponent<SPHController>();
             };
 
@@ -47,7 +55,41 @@ namespace SongPlayHistory
         [OnExit]
         public void OnExit()
         {
+            BS_Utils.Utilities.BSEvents.gameSceneLoaded -= OnGameSceneLoaded;
+            BS_Utils.Plugin.LevelDidFinishEvent -= OnLevelFinished;
+            BS_Utils.Plugin.MultiLevelDidFinishEvent -= OnMultilevelFinished;
+
             SPHModel.BackupRecords();
+        }
+
+        private void OnGameSceneLoaded()
+        {
+            var practiceSettings = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData?.practiceSettings;
+            _isPractice = practiceSettings != null;
+        }
+
+        private void OnLevelFinished(StandardLevelScenesTransitionSetupDataSO scene, LevelCompletionResults result)
+        {
+            if (_isPractice || Gamemode.IsPartyActive)
+            {
+                return;
+            }
+            SaveRecord(scene?.difficultyBeatmap, result, false);
+        }
+
+        private void OnMultilevelFinished(MultiplayerLevelScenesTransitionSetupDataSO scene, LevelCompletionResults result, Dictionary<string, LevelCompletionResults> __)
+        {
+            SaveRecord(scene?.difficultyBeatmap, result, true);
+        }
+
+        private void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults result, bool isMultiplayer)
+        {
+            if (result?.rawScore > 0)
+            {
+                // Actually there's no way to know if any custom modifier was applied if the user failed a map.
+                var submissionDisabled = ScoreSubmission.WasDisabled || ScoreSubmission.Disabled || ScoreSubmission.ProlongedDisabled;
+                SPHModel.SaveRecord(beatmap, result, submissionDisabled, isMultiplayer);
+            }
         }
 
         public void ApplyHarmonyPatches(bool enabled)

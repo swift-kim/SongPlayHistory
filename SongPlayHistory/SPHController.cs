@@ -1,7 +1,4 @@
-﻿using BS_Utils.Gameplay;
-using BS_Utils.Utilities;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +10,6 @@ namespace SongPlayHistory
         public static SPHController Instance { get; set; }
 
         private SPHUI _pluginUI;
-        private bool _isPractice;
 
         #region MonoBehaviour Messages
         /// <summary>
@@ -23,11 +19,6 @@ namespace SongPlayHistory
         {
             if (Instance != null)
             {
-                try
-                {
-                    Instance.UnsubscribeEvents();
-                }
-                catch { }
                 Destroy(Instance.gameObject);
             }
 
@@ -89,35 +80,21 @@ namespace SongPlayHistory
         {
             // We don't have to re-initialize unless the menu scene is reloaded.
             if (_pluginUI != null)
+            {
                 return;
+            }
 
             BeatSaberUI.Initialize();
             _pluginUI = new SPHUI();
 
-            UnsubscribeEvents();
-            SubscribeEvents();
-
-            Plugin.Log?.Info("Initialization complete.");
-        }
-
-        internal void UnsubscribeEvents()
-        {
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
-            BeatSaberUI.LevelDetailViewController.didChangeContentEvent -= OnContentChanged;
-            BSEvents.gameSceneLoaded -= OnGameSceneLoaded;
-            BS_Utils.Plugin.LevelDidFinishEvent -= OnLevelFinished;
-            BS_Utils.Plugin.MultiLevelDidFinishEvent -= OnMultilevelFinished;
-            BeatSaberUI.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
-        }
-
-        private void SubscribeEvents()
-        {
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDifficultyChanged;
+            BeatSaberUI.LevelDetailViewController.didChangeContentEvent -= OnContentChanged;
             BeatSaberUI.LevelDetailViewController.didChangeContentEvent += OnContentChanged;
-            BSEvents.gameSceneLoaded += OnGameSceneLoaded;
-            BS_Utils.Plugin.LevelDidFinishEvent += OnLevelFinished;
-            BS_Utils.Plugin.MultiLevelDidFinishEvent += OnMultilevelFinished;
+            BeatSaberUI.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
             BeatSaberUI.ResultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
+
+            Plugin.Log?.Info("Initialization completed.");
         }
 
         private void OnDifficultyChanged(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
@@ -133,42 +110,13 @@ namespace SongPlayHistory
             }
         }
 
-        private void OnGameSceneLoaded()
-        {
-            var practiceSettings = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData?.practiceSettings;
-            _isPractice = practiceSettings != null;
-        }
-
-        private void OnLevelFinished(StandardLevelScenesTransitionSetupDataSO scene, LevelCompletionResults result)
-        {
-            if (_isPractice || Gamemode.IsPartyActive)
-            {
-                return;
-            }
-            SaveRecord(scene?.difficultyBeatmap, result, false);
-            Refresh();
-        }
-
-        private void OnMultilevelFinished(MultiplayerLevelScenesTransitionSetupDataSO scene, LevelCompletionResults result, Dictionary<string, LevelCompletionResults> __)
-        {
-            SaveRecord(scene?.difficultyBeatmap, result, true);
-        }
-
-        private void SaveRecord(IDifficultyBeatmap beatmap, LevelCompletionResults result, bool isMultiplayer)
-        {
-            if (result?.rawScore > 0)
-            {
-                // Actually there's no way to know if any custom modifier was applied if the user failed a song.
-                var submissionDisabled = ScoreSubmission.WasDisabled || ScoreSubmission.Disabled || ScoreSubmission.ProlongedDisabled;
-                SPHModel.SaveRecord(beatmap, result, submissionDisabled, isMultiplayer);
-            }
-        }
-
         private void OnPlayResultDismiss(ResultsViewController _)
         {
             // The user may have voted on this map.
             SPHModel.ScanVoteData();
             BeatSaberUI.ReloadSongList();
+
+            Refresh();
         }
 
         private void Refresh()
