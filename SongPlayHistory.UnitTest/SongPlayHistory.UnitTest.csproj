@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SongPlayHistory\SongPlayHistory.csproj" />
     <Reference Include="IPA.Loader">
-      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
+      <HintPath>..\SongPlayHistory\References\IPA\Data\Managed\IPA.Loader.dll</HintPath>
     </Reference>
   </ItemGroup>
 
