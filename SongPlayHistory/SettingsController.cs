@@ -4,13 +4,6 @@ namespace SongPlayHistory
 {
     public class SettingsController : PersistentSingleton<SettingsController>
     {
-        [UIValue("show-play-counts")]
-        public bool ShowPlayCounts
-        {
-            get => PluginConfig.Instance.ShowPlayCounts;
-            set => PluginConfig.Instance.ShowPlayCounts = value;
-        }
-
         [UIValue("show-failed")]
         public bool ShowFailed
         {

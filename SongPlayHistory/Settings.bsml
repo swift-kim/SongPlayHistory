@@ -1,5 +1,4 @@
 ﻿<settings-container>
-  <bool-setting text='Show Play Counts' value='show-play-counts' hover-hint='Display total play counts'></bool-setting>
   <bool-setting text='Show Failed' value='show-failed' hover-hint='Display failed records'></bool-setting>
   <bool-setting text='Average Accuracy' value='average-accuracy' hover-hint='Exclude remaining notes when evaluating accuracy'></bool-setting>
   <bool-setting text='Sort by Date' value='sort-by-date' hover-hint='Latest records (otherwise best records) on the top'></bool-setting>

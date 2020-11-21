@@ -85,6 +85,24 @@ namespace SongPlayHistory
             // We now keep failed records.
             var cleared = result.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
 
+            static Param ModsToParam(GameplayModifiers mods)
+            {
+                Param param = Param.None;
+                param |= mods.energyType == GameplayModifiers.EnergyType.Battery ? Param.BatteryEnergy : 0;
+                param |= mods.noFail ? Param.NoFail : 0;
+                param |= mods.instaFail ? Param.InstaFail : 0;
+                param |= mods.enabledObstacleType == GameplayModifiers.EnabledObstacleType.NoObstacles ? Param.NoObstacles : 0;
+                param |= mods.noBombs ? Param.NoBombs : 0;
+                param |= mods.fastNotes ? Param.FastNotes : 0;
+                param |= mods.strictAngles ? Param.StrictAngles : 0;
+                param |= mods.disappearingArrows ? Param.DisappearingArrows : 0;
+                param |= mods.songSpeed == GameplayModifiers.SongSpeed.Faster ? Param.FasterSong : 0;
+                param |= mods.songSpeed == GameplayModifiers.SongSpeed.Slower ? Param.SlowerSong : 0;
+                param |= mods.noArrows ? Param.NoArrows : 0;
+                param |= mods.ghostNotes ? Param.GhostNotes : 0;
+                return param;
+            }
+
             // If submissionDisabled = true, we assume custom gameplay modifiers are applied.
             var param = ModsToParam(result.gameplayModifiers);
             param |= submissionDisabled ? Param.SubmissionDisabled : 0;
@@ -114,39 +132,20 @@ namespace SongPlayHistory
             Plugin.Log?.Info($"Saved a new record {difficulty} ({result.modifiedScore}).");
         }
 
-        private static Param ModsToParam(GameplayModifiers mods)
+        public static PlayerLevelStatsData GetPlayerStats(IDifficultyBeatmap beatmap)
         {
-            Param param = Param.None;
-            param |= mods.energyType == GameplayModifiers.EnergyType.Battery ? Param.BatteryEnergy : 0;
-            param |= mods.noFail ? Param.NoFail : 0;
-            param |= mods.instaFail ? Param.InstaFail : 0;
-            param |= mods.enabledObstacleType == GameplayModifiers.EnabledObstacleType.NoObstacles ? Param.NoObstacles : 0;
-            param |= mods.noBombs ? Param.NoBombs : 0;
-            param |= mods.fastNotes ? Param.FastNotes : 0;
-            param |= mods.strictAngles ? Param.StrictAngles : 0;
-            param |= mods.disappearingArrows ? Param.DisappearingArrows : 0;
-            param |= mods.songSpeed == GameplayModifiers.SongSpeed.Faster ? Param.FasterSong : 0;
-            param |= mods.songSpeed == GameplayModifiers.SongSpeed.Slower ? Param.SlowerSong : 0;
-            param |= mods.noArrows ? Param.NoArrows : 0;
-            param |= mods.ghostNotes ? Param.GhostNotes : 0;
-            return param;
-        }
-
-        public static int GetPlayCount(IDifficultyBeatmap beatmap)
-        {
+            if (!BeatSaberUI.IsValid)
+            {
+                return null;
+            }
             var playerDataModel = BeatSaberUI.LevelDetailViewController.GetPrivateField<PlayerDataModel>("_playerDataModel");
             var statsList = playerDataModel.playerData.levelsStatsData;
-            if (statsList == null)
-            {
-                Plugin.Log?.Warn($"The player stats data was not found.");
-            }
-            var stat = statsList.FirstOrDefault(x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
-            if (stat == null)
+            var stats = statsList?.FirstOrDefault(x => x.levelID == beatmap.level.levelID && x.difficulty == beatmap.difficulty);
+            if (stats == null)
             {
                 Plugin.Log?.Warn($"{nameof(PlayerLevelStatsData)} not found for {beatmap.level.levelID} - {beatmap.difficulty}.");
-                return -1;
             }
-            return stat.playCount;
+            return stats;
         }
 
         public static bool ScanVoteData()

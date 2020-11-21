@@ -13,36 +13,120 @@ namespace SongPlayHistory
 {
     internal class SPHUI
     {
-        private readonly HoverHint _hoverHint;
-        private readonly RectTransform _maxCombo;
-        private readonly RectTransform _highscore;
-        private readonly RectTransform _maxRank;
-        private RectTransform _playCount;
-
-        public SPHUI()
+        private LevelStatsView _levelStatsView;
+        private LevelStatsView LevelStatsView
         {
-            _maxCombo = BeatSaberUI.LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
-            _highscore = BeatSaberUI.LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
-            _maxRank = BeatSaberUI.LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
-
-            var playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            var hiddenButton = UnityEngine.Object.Instantiate(playButton, BeatSaberUI.LevelStatsView.transform);
-            hiddenButton.name = "HoverArea";
-            (hiddenButton.transform as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0f, 68f);
-            foreach (var image in hiddenButton.GetComponentsInChildren<ImageView>())
+            get
             {
-                image.color = Color.clear;
+                if (!BeatSaberUI.IsValid)
+                {
+                    return null;
+                }
+                if (BeatSaberUI.IsSolo)
+                {
+                    if (_levelStatsView != null)
+                    {
+                        UnityEngine.Object.Destroy(_levelStatsView.gameObject);
+                        _levelStatsView = null;
+                    }
+                    return BeatSaberUI.LeaderboardLevelStatsView;
+                }
+                else
+                {
+                    if (_levelStatsView == null)
+                    {
+                        var template = Resources.FindObjectsOfTypeAll<LevelStatsView>().First();
+                        _levelStatsView = UnityEngine.Object.Instantiate(template, BeatSaberUI.LevelCollectionTableView.transform);
+                        var transform = _levelStatsView.transform as RectTransform;
+                        transform.anchorMin = new Vector2(0f, 0f);
+                        transform.anchorMax = new Vector2(1f, 0f);
+                        transform.anchoredPosition = new Vector2(0f, -16f); // Need some margin for SongBrowser.
+                        transform.sizeDelta = new Vector2(0f, 8f);
+                    }
+                    return _levelStatsView;
+                }
             }
-            hiddenButton.SetButtonText("");
-
-            _hoverHint = hiddenButton.GetComponentInChildren<HoverHint>();
-            var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-            _hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
-            _hoverHint.text = "";
         }
 
-        public void ShowRecords(IDifficultyBeatmap beatmap, List<Record> records)
+        private HoverHint HoverHint
         {
+            get
+            {
+                if (LevelStatsView == null)
+                {
+                    return null;
+                }
+                var hoverHint = LevelStatsView.GetComponentsInChildren<HoverHint>().FirstOrDefault(x => x.name == "HoverArea");
+                if (!BeatSaberUI.IsSolo)
+                {
+                    // Unsupported for now.
+                    var hiddenButton = hoverHint?.GetComponentInParent<Button>();
+                    if (hiddenButton != null)
+                    {
+                        UnityEngine.Object.Destroy(hiddenButton.gameObject);
+                    }
+                    return null;
+                }
+                if (hoverHint == null)
+                {
+                    var template = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
+                    var hiddenButton = UnityEngine.Object.Instantiate(template, LevelStatsView.transform, false);
+                    hiddenButton.name = "HoverArea";
+                    hiddenButton.onClick.RemoveAllListeners();
+                    var transform = hiddenButton.transform as RectTransform;
+                    transform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0f, 68f);
+                    foreach (var image in hiddenButton.GetComponentsInChildren<ImageView>())
+                    {
+                        image.color = Color.clear;
+                    }
+                    hiddenButton.SetButtonText("");
+
+                    hoverHint = hiddenButton.GetComponentInChildren<HoverHint>();
+                    var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
+                    hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
+                    hoverHint.text = "";
+                }
+                return hoverHint;
+            }
+        }
+
+        private RectTransform PlayCount
+        {
+            get
+            {
+                if (LevelStatsView == null)
+                {
+                    return null;
+                }
+                var playCount = LevelStatsView.GetComponentsInChildren<RectTransform>().FirstOrDefault(x => x.name == "PlayCount");
+                if (playCount == null)
+                {
+                    var maxCombo = LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
+                    var highscore = LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
+                    var maxRank = LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
+
+                    playCount = UnityEngine.Object.Instantiate(maxCombo, LevelStatsView.transform);
+                    playCount.name = "PlayCount";
+                    var playCountTitle = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
+                    playCountTitle.SetText("Play Count");
+
+                    float width = 17f;
+                    maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0f, width);
+                    highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width, width);
+                    maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width * 2, width);
+                    playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width * 3, width);
+                }
+                return playCount;
+            }
+        }
+
+        public void SetRecords(IDifficultyBeatmap beatmap, List<Record> records)
+        {
+            if (HoverHint == null || beatmap == null)
+            {
+                return;
+            }
+
             if (records?.Count > 0)
             {
                 List<Record> truncated = records.Take(10).ToList();
@@ -50,6 +134,37 @@ namespace SongPlayHistory
                 var notesCount = beatmap.beatmapData.cuttableNotesType;
                 var maxScore = ScoreModel.MaxRawScoreForNumberOfNotes(notesCount);
                 var builder = new StringBuilder(200);
+
+                static string ConcatParam(Param param)
+                {
+                    if (param == Param.None)
+                    {
+                        return "";
+                    }
+
+                    var mods = new List<string>();
+                    if (param.HasFlag(Param.SubmissionDisabled)) mods.Add("??");
+                    if (param.HasFlag(Param.Multiplayer)) mods.Add("MULTI");
+                    if (param.HasFlag(Param.DisappearingArrows)) mods.Add("DA");
+                    if (param.HasFlag(Param.GhostNotes)) mods.Add("GN");
+                    if (param.HasFlag(Param.FasterSong)) mods.Add("FS");
+                    if (param.HasFlag(Param.NoFail)) mods.Add("NF");
+                    if (param.HasFlag(Param.NoObstacles)) mods.Add("NO");
+                    if (param.HasFlag(Param.NoBombs)) mods.Add("NB");
+                    if (param.HasFlag(Param.SlowerSong)) mods.Add("SS");
+                    if (param.HasFlag(Param.NoArrows)) mods.Add("NA");
+                    if (param.HasFlag(Param.InstaFail)) mods.Add("IF");
+                    if (param.HasFlag(Param.BatteryEnergy)) mods.Add("BE");
+                    if (param.HasFlag(Param.FastNotes)) mods.Add("FN");
+                    if (param.HasFlag(Param.StrictAngles)) mods.Add("SA");
+                    if (mods.Count > 4)
+                    {
+                        mods = mods.Take(3).ToList(); // Truncate
+                        mods.Add("..");
+                    }
+
+                    return string.Join(",", mods);
+                }
 
                 static string Space(int len)
                 {
@@ -91,61 +206,44 @@ namespace SongPlayHistory
                     builder.AppendLine();
                 }
 
-                _hoverHint.text = builder.ToString();
+                HoverHint.text = builder.ToString();
             }
             else
             {
-                _hoverHint.text = "No record";
+                HoverHint.text = "No record";
             }
         }
 
-        private static string ConcatParam(Param param)
+        public void SetStats(IDifficultyBeatmap beatmap, PlayerLevelStatsData stats)
         {
-            if (param == Param.None)
-                return "";
-
-            var mods = new List<string>();
-            if (param.HasFlag(Param.SubmissionDisabled)) mods.Add("??");
-            if (param.HasFlag(Param.Multiplayer)) mods.Add("MULTI");
-            if (param.HasFlag(Param.DisappearingArrows)) mods.Add("DA");
-            if (param.HasFlag(Param.GhostNotes)) mods.Add("GN");
-            if (param.HasFlag(Param.FasterSong)) mods.Add("FS");
-            if (param.HasFlag(Param.NoFail)) mods.Add("NF");
-            if (param.HasFlag(Param.NoObstacles)) mods.Add("NO");
-            if (param.HasFlag(Param.NoBombs)) mods.Add("NB");
-            if (param.HasFlag(Param.SlowerSong)) mods.Add("SS");
-            if (param.HasFlag(Param.NoArrows)) mods.Add("NA");
-            if (param.HasFlag(Param.InstaFail)) mods.Add("IF");
-            if (param.HasFlag(Param.BatteryEnergy)) mods.Add("BE");
-            if (param.HasFlag(Param.FastNotes)) mods.Add("FN");
-            if (param.HasFlag(Param.StrictAngles)) mods.Add("SA");
-            if (mods.Count > 4)
+            if (beatmap == null || stats == null)
             {
-                mods = mods.Take(3).ToList(); // Truncate
-                mods.Add("..");
+                return;
             }
 
-            return string.Join(",", mods);
-        }
-
-        public void ShowPlayCount(int count)
-        {
-            if (_playCount == null)
+            static void SetValue(RectTransform column, string value)
             {
-                _playCount = UnityEngine.Object.Instantiate(_maxCombo, BeatSaberUI.LevelStatsView.transform);
-                _playCount.name = "PlayCount";
-                var playCountTitle = _playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
-                playCountTitle.SetText("Play Count");
-
-                float width = 17f;
-                _maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0f, width);
-                _highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width, width);
-                _maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width * 2, width);
-                _playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width * 3, width);
+                if (column == null)
+                {
+                    return;
+                }
+                var text = column.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
+                text.SetText(value);
             }
 
-            var playCountValue = _playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Value");
-            playCountValue.SetText(count > 0 ? count.ToString() : "-");
+            if (!BeatSaberUI.IsSolo && LevelStatsView != null)
+            {
+                var maxCombo = LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxCombo");
+                var highscore = LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
+                var maxRank = LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
+                var notesCount = beatmap.beatmapData.cuttableNotesType;
+                var maxScore = ScoreModel.MaxRawScoreForNumberOfNotes(notesCount);
+                var estimatedAcc = stats.highScore / (float)maxScore * 100f;
+                SetValue(maxCombo, stats.validScore ? $"{stats.maxCombo}" : "-");
+                SetValue(highscore, stats.validScore ? $"{stats.highScore} ({estimatedAcc:0.00}%)" : "-");
+                SetValue(maxRank, stats.validScore ? RankModel.GetRankName(stats.maxRank) : "-");
+            }
+            SetValue(PlayCount, stats.validScore ? stats.playCount.ToString() : "-");
         }
     }
 }

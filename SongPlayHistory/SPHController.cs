@@ -5,11 +5,11 @@ using UnityEngine.UI;
 
 namespace SongPlayHistory
 {
-    public class SPHController : MonoBehaviour
+    internal class SPHController : MonoBehaviour
     {
         public static SPHController Instance { get; set; }
 
-        private SPHUI _pluginUI;
+        private readonly SPHUI _pluginUI = new SPHUI();
 
         #region MonoBehaviour Messages
         /// <summary>
@@ -21,7 +21,6 @@ namespace SongPlayHistory
             {
                 Destroy(Instance.gameObject);
             }
-
             DontDestroyOnLoad(this);
             Instance = this;
         }
@@ -32,11 +31,10 @@ namespace SongPlayHistory
         private void Start()
         {
             var soloButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloButton");
-            soloButton?.onClick.AddListener(() =>
-            {
-                // Fail fast when an error is encountered during initialization.
-                Initialize();
-            });
+            soloButton.onClick.AddListener(InitializeSolo);
+
+            var onlineButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "OnlineButton");
+            onlineButton.onClick.AddListener(InitializeMultiplayer);
         }
 
         /// <summary>
@@ -76,16 +74,15 @@ namespace SongPlayHistory
         }
         #endregion
 
-        private void Initialize()
+        private void InitializeSolo()
         {
-            // We don't have to re-initialize unless the menu scene is reloaded.
-            if (_pluginUI != null)
+            BeatSaberUI.IsSolo = true;
+
+            if (!BeatSaberUI.IsValid)
             {
+                Plugin.Log?.Error("[Solo] Initialization failed.");
                 return;
             }
-
-            BeatSaberUI.Initialize();
-            _pluginUI = new SPHUI();
 
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
             BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDifficultyChanged;
@@ -94,7 +91,25 @@ namespace SongPlayHistory
             BeatSaberUI.ResultsViewController.continueButtonPressedEvent -= OnPlayResultDismiss;
             BeatSaberUI.ResultsViewController.continueButtonPressedEvent += OnPlayResultDismiss;
 
-            Plugin.Log?.Info("Initialization completed.");
+            Plugin.Log?.Info("[Solo] Initialization done.");
+        }
+
+        private void InitializeMultiplayer()
+        {
+            BeatSaberUI.IsSolo = false;
+
+            if (!BeatSaberUI.IsValid)
+            {
+                Plugin.Log?.Error("[Multiplayer] Initialization failed.");
+                return;
+            }
+
+            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
+            BeatSaberUI.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDifficultyChanged;
+            BeatSaberUI.LevelDetailViewController.didChangeContentEvent -= OnContentChanged;
+            BeatSaberUI.LevelDetailViewController.didChangeContentEvent += OnContentChanged;
+
+            Plugin.Log?.Info("[Multiplayer] Initialization done.");
         }
 
         private void OnDifficultyChanged(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
@@ -123,20 +138,15 @@ namespace SongPlayHistory
         {
             Plugin.Log?.Info("Refreshing data...");
 
-            var beatmap = BeatSaberUI.LevelDetailViewController.selectedDifficultyBeatmap;
+            var beatmap = BeatSaberUI.LevelDetailViewController?.selectedDifficultyBeatmap;
             if (beatmap == null)
             {
                 return;
             }
-
             try
             {
-                _pluginUI.ShowRecords(beatmap, SPHModel.GetRecords(beatmap));
-
-                if (PluginConfig.Instance.ShowPlayCounts)
-                {
-                    _pluginUI.ShowPlayCount(SPHModel.GetPlayCount(beatmap));
-                }
+                _pluginUI.SetRecords(beatmap, SPHModel.GetRecords(beatmap));
+                _pluginUI.SetStats(beatmap, SPHModel.GetPlayerStats(beatmap));
             }
             catch (Exception ex) // Any UnityException
             {
