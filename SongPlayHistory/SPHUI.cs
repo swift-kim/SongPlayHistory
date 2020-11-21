@@ -72,13 +72,12 @@ namespace SongPlayHistory
                     var template = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
                     var hiddenButton = UnityEngine.Object.Instantiate(template, LevelStatsView.transform, false);
                     hiddenButton.name = "HoverArea";
-                    hiddenButton.onClick.RemoveAllListeners();
-                    var transform = hiddenButton.transform as RectTransform;
-                    transform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0f, 68f);
+                    (hiddenButton.transform as RectTransform).sizeDelta = new Vector2(68f, 8f);
                     foreach (var image in hiddenButton.GetComponentsInChildren<ImageView>())
                     {
                         image.color = Color.clear;
                     }
+                    hiddenButton.onClick.RemoveAllListeners();
                     hiddenButton.SetButtonText("");
 
                     hoverHint = hiddenButton.GetComponentInChildren<HoverHint>();
@@ -110,11 +109,15 @@ namespace SongPlayHistory
                     var playCountTitle = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
                     playCountTitle.SetText("Play Count");
 
-                    float width = 17f;
-                    maxCombo.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0f, width);
-                    highscore.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width, width);
-                    maxRank.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width * 2, width);
-                    playCount.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, width * 3, width);
+                    const float w = 0.225f;
+                    (maxCombo.transform as RectTransform).anchorMin = new Vector2(0f, .5f);
+                    (maxCombo.transform as RectTransform).anchorMax = new Vector2(1 * w, .5f);
+                    (highscore.transform as RectTransform).anchorMin = new Vector2(1 * w, .5f);
+                    (highscore.transform as RectTransform).anchorMax = new Vector2(2 * w, .5f);
+                    (maxRank.transform as RectTransform).anchorMin = new Vector2(2 * w, .5f);
+                    (maxRank.transform as RectTransform).anchorMax = new Vector2(3 * w, .5f);
+                    (playCount.transform as RectTransform).anchorMin = new Vector2(3 * w, .5f);
+                    (playCount.transform as RectTransform).anchorMax = new Vector2(4 * w, .5f);
                 }
                 return playCount;
             }
