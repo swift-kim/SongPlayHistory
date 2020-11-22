@@ -13,7 +13,7 @@ namespace SongPlayHistory
 
         public static StandardLevelDetailViewController LevelDetailViewController { get; private set; }
 
-        public static LevelCollectionViewController LevelCollectionViewController { get; private set; }
+        public static LevelParamsPanel LevelParamsPanel { get; private set; }
 
         public static LevelCollectionTableView LevelCollectionTableView { get; private set; }
 
@@ -46,8 +46,10 @@ namespace SongPlayHistory
                 var levelSelectionNavController = _flowCoordinator?.GetPrivateField<LevelSelectionNavigationController>("levelSelectionNavigationController");
                 var levelCollectionNavController = levelSelectionNavController?.GetPrivateField<LevelCollectionNavigationController>("_levelCollectionNavigationController");
                 LevelDetailViewController = levelCollectionNavController?.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
-                LevelCollectionViewController = levelCollectionNavController?.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
-                LevelCollectionTableView = LevelCollectionViewController?.GetPrivateField<LevelCollectionTableView>("_levelCollectionTableView");
+                var levelDetailView = LevelDetailViewController?.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
+                LevelParamsPanel = levelDetailView?.GetPrivateField<LevelParamsPanel>("_levelParamsPanel");
+                var levelCollectionViewController = levelCollectionNavController?.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
+                LevelCollectionTableView = levelCollectionViewController?.GetPrivateField<LevelCollectionTableView>("_levelCollectionTableView");
             }
         }
 

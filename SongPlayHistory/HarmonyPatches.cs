@@ -4,6 +4,7 @@ using HarmonyLib;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.Object;
 
 namespace SongPlayHistory
 {
@@ -44,7 +45,7 @@ namespace SongPlayHistory
             }
             if (voteIcon == null)
             {
-                voteIcon = UnityEngine.Object.Instantiate(____favoritesBadgeImage, __instance.transform);
+                voteIcon = Instantiate(____favoritesBadgeImage, __instance.transform);
                 voteIcon.name = "Vote";
                 voteIcon.rectTransform.sizeDelta = new Vector2(2.5f, 2.5f);
                 voteIcon.color = new Color(1f, 1f, 1f, 0.3f);
@@ -64,7 +65,7 @@ namespace SongPlayHistory
             {
                 if (image.name == "Vote")
                 {
-                    UnityEngine.Object.Destroy(image.gameObject);
+                    Destroy(image.gameObject);
                 }
             }
         }

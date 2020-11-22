@@ -1,13 +1,14 @@
-﻿using BeatSaberMarkupLanguage;
-using BS_Utils.Utilities;
+﻿using BS_Utils.Utilities;
 using HMUI;
+using IPA.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using VRUIControls;
+using static UnityEngine.Object;
 
 namespace SongPlayHistory
 {
@@ -26,7 +27,9 @@ namespace SongPlayHistory
                 {
                     if (_levelStatsView != null)
                     {
-                        UnityEngine.Object.Destroy(_levelStatsView.gameObject);
+                        var vc = _levelStatsView.GetComponentInParent<ViewController>();
+                        Destroy(vc?.gameObject);
+
                         _levelStatsView = null;
                     }
                     return BeatSaberUI.LeaderboardLevelStatsView;
@@ -35,13 +38,24 @@ namespace SongPlayHistory
                 {
                     if (_levelStatsView == null)
                     {
+                        var vc = new GameObject(
+                            "LevelStatsViewController",
+                            typeof(VRGraphicRaycaster),
+                            typeof(CurvedCanvasSettings),
+                            typeof(CanvasGroup),
+                            typeof(ViewController)).GetComponent<ViewController>();
+                        var mainMenu = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
+                        var physicsRaycaster = mainMenu.GetComponent<VRGraphicRaycaster>()
+                            .GetField<PhysicsRaycasterWithCache, VRGraphicRaycaster>("_physicsRaycaster");
+                        vc.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", physicsRaycaster);
+                        vc.GetComponent<CurvedCanvasSettings>().SetRadius(140f); // Some value between 125 (SongBrowser) and 154.
+                        vc.transform.SetParent(BeatSaberUI.LevelCollectionTableView.transform, false);
+                        vc.transform.AlignBottom(8f, -14f); // Room for SongBrowser.
+                        vc.gameObject.SetActive(true);
+
                         var template = Resources.FindObjectsOfTypeAll<LevelStatsView>().First();
-                        _levelStatsView = UnityEngine.Object.Instantiate(template, BeatSaberUI.LevelCollectionTableView.transform);
-                        var transform = _levelStatsView.transform as RectTransform;
-                        transform.anchorMin = new Vector2(0f, 0f);
-                        transform.anchorMax = new Vector2(1f, 0f);
-                        transform.anchoredPosition = new Vector2(0f, -16f); // Need some margin for SongBrowser.
-                        transform.sizeDelta = new Vector2(0f, 8f);
+                        _levelStatsView = Instantiate(template, vc.transform);
+                        _levelStatsView.transform.MatchParent();
                     }
                     return _levelStatsView;
                 }
@@ -57,34 +71,22 @@ namespace SongPlayHistory
                     return null;
                 }
                 var hoverHint = LevelStatsView.GetComponentsInChildren<HoverHint>().FirstOrDefault(x => x.name == "HoverArea");
-                if (!BeatSaberUI.IsSolo)
-                {
-                    // Unsupported for now.
-                    var hiddenButton = hoverHint?.GetComponentInParent<Button>();
-                    if (hiddenButton != null)
-                    {
-                        UnityEngine.Object.Destroy(hiddenButton.gameObject);
-                    }
-                    return null;
-                }
                 if (hoverHint == null)
                 {
-                    var template = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-                    var hiddenButton = UnityEngine.Object.Instantiate(template, LevelStatsView.transform, false);
-                    hiddenButton.name = "HoverArea";
-                    (hiddenButton.transform as RectTransform).sizeDelta = new Vector2(68f, 8f);
-                    foreach (var image in hiddenButton.GetComponentsInChildren<ImageView>())
-                    {
-                        image.color = Color.clear;
-                    }
-                    hiddenButton.onClick.RemoveAllListeners();
-                    hiddenButton.SetButtonText("");
+                    var template = BeatSaberUI.LevelParamsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NotesCount");
+                    var label = Instantiate(template, LevelStatsView.transform);
+                    label.name = "HoverArea";
+                    label.transform.MatchParent();
+                    Destroy(label.transform.Find("Icon").gameObject);
+                    Destroy(label.transform.Find("ValueText").gameObject);
+                    DestroyImmediate(label.GetComponentInChildren<HoverHint>());
+                    Destroy(label.GetComponentInChildren<LocalizedHoverHint>());
 
-                    hoverHint = hiddenButton.GetComponentInChildren<HoverHint>();
-                    var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-                    hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
+                    hoverHint = label.gameObject.AddComponent<HoverHint>();
                     hoverHint.text = "";
                 }
+                var hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
+                hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
                 return hoverHint;
             }
         }
@@ -104,10 +106,8 @@ namespace SongPlayHistory
                     var highscore = LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Highscore");
                     var maxRank = LevelStatsView.GetComponentsInChildren<RectTransform>().First(x => x.name == "MaxRank");
 
-                    playCount = UnityEngine.Object.Instantiate(maxCombo, LevelStatsView.transform);
+                    playCount = Instantiate(maxCombo, LevelStatsView.transform);
                     playCount.name = "PlayCount";
-                    var playCountTitle = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
-                    playCountTitle.SetText("Play Count");
 
                     const float w = 0.225f;
                     (maxCombo.transform as RectTransform).anchorMin = new Vector2(0f, .5f);
@@ -119,6 +119,8 @@ namespace SongPlayHistory
                     (playCount.transform as RectTransform).anchorMin = new Vector2(3 * w, .5f);
                     (playCount.transform as RectTransform).anchorMax = new Vector2(4 * w, .5f);
                 }
+                var title = playCount.GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Title");
+                title.SetText("Play Count");
                 return playCount;
             }
         }
@@ -247,6 +249,35 @@ namespace SongPlayHistory
                 SetValue(maxRank, stats.validScore ? RankModel.GetRankName(stats.maxRank) : "-");
             }
             SetValue(PlayCount, stats.validScore ? stats.playCount.ToString() : "-");
+        }
+    }
+
+    internal static class LayoutUtility
+    {
+        public static void MatchParent(this Transform transform)
+        {
+            var rect = transform as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.anchoredPosition = new Vector2(0f, 0f);
+            rect.sizeDelta = new Vector2(1f, 1f);
+        }
+
+        public static void AlignBottom(this Transform transform, float height, float margin)
+        {
+            var rect = transform as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.anchoredPosition = new Vector2(0f, margin);
+            rect.sizeDelta = new Vector2(0f, height);
         }
     }
 }
