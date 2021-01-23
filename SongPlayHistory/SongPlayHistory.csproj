@@ -1,35 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A27CE832-9835-494F-BCD9-1D8A4A0F90ED}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SongPlayHistory</RootNamespace>
+    <TargetFramework>net472</TargetFramework>
     <AssemblyName>SongPlayHistory</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <AssemblyVersion>1.5.1</AssemblyVersion>
     <LangVersion>8.0</LangVersion>
-    <FileAlignment>512</FileAlignment>
-    <PathMap>$(SolutionDir)=C:\</PathMap>
-    <DebugType>portable</DebugType>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <BeatSaberDir>$(ProjectDir)References</BeatSaberDir>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <Optimize>False</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <Optimize>True</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -50,12 +37,6 @@
       <HintPath>$(BeatSaberDir)\Plugins\BS_Utils.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
     <Reference Include="MainAssembly">
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Main.dll</HintPath>
       <Private>False</Private>
@@ -122,17 +103,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BeatSaberUI.cs" />
-    <Compile Include="HarmonyPatches.cs" />
-    <Compile Include="Plugin.cs" />
-    <Compile Include="PluginConfig.cs" />
-    <Compile Include="SPHController.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SettingsController.cs" />
-    <Compile Include="SPHModel.cs" />
-    <Compile Include="SPHUI.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="CreateJunctions.bat" />
     <None Include=".gitignore" />
     <EmbeddedResource Include="manifest.json" />
@@ -140,252 +110,54 @@
     <EmbeddedResource Include="Assets\ThumbsDown.png" />
     <EmbeddedResource Include="Settings.bsml" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!--Build Targets-->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(MSBuildProjectName).UnitTest</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BeatSaberModdingTools.Tasks">
+      <Version>1.3.2</Version>
+      <IncludeAssets>runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <PropertyGroup>
+    <BuildTargetsVersion>2.0</BuildTargetsVersion>
+    <BuildTargetsModified>false</BuildTargetsModified>
+    <OutputAssemblyName>$(OutputPath)$(AssemblyName)</OutputAssemblyName>
+    <ArtifactDestination>$(OutputPath)Final</ArtifactDestination>
+    <ErrorOnMismatchedVersions Condition="'$(Configuration)' == 'Release'">True</ErrorOnMismatchedVersions>
+  </PropertyGroup>
   <Target Name="CopyToPlugins" AfterTargets="Build" Condition="'$(NCrunch)' != '1'">
-    <Message Text="Copying $(OutputPath)$(AssemblyName).dll to IPA\Pending\Plugins folder" Importance="high" />
-    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFiles="$(BeatSaberDir)\IPA\Pending\Plugins\$(AssemblyName).dll" />
+    <Message Text="Copying $(OutputAssemblyName).dll to IPA\Pending\Plugins folder" Importance="high" />
+    <Copy SourceFiles="$(OutputAssemblyName).dll" DestinationFiles="$(BeatSaberDir)\IPA\Pending\Plugins\$(AssemblyName).dll" />
   </Target>
-  <Target Name="ZipRelease" AfterTargets="Build" Condition="'$(NCrunch' != '1' AND '$(Configuration)' == 'Release'">
-    <Message Text="Zipping plugin for release." Importance="high" />
-    <GetCommitHash ProjectDir="$(ProjectDir)">
-      <Output TaskParameter="CommitShortHash" PropertyName="CommitShortHash" />
-    </GetCommitHash>
-    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFiles="$(IntermediateOutputPath)zip\Plugins\$(AssemblyName).dll" />
-    <GetManifestInfo>
+  <Target Name="GetProjectInfo" AfterTargets="BeforeBuild" Condition="'$(BSMTTaskAssembly)' != ''">
+    <GetManifestInfo ManifestPath="manifest.json">
       <Output TaskParameter="PluginVersion" PropertyName="PluginVersion" />
       <Output TaskParameter="GameVersion" PropertyName="GameVersion" />
-      <Output TaskParameter="AssemblyVersion" PropertyName="AssemblyVersion" />
     </GetManifestInfo>
-    <Message Text="PluginVersion: $(PluginVersion), AssemblyVersion: $(AssemblyVersion), GameVersion: $(GameVersion)" Importance="high" />
-    <ZipDir ZipFileName="$(OutDir)zip\$(AssemblyName)-$(PluginVersion)-bs$(GameVersion)-$(CommitShortHash).zip" DirectoryName="$(IntermediateOutputPath)zip" />
+    <GetCommitInfo ProjectDir="$(ProjectDir)">
+      <Output TaskParameter="CommitHash" PropertyName="CommitHash" />
+    </GetCommitInfo>
+    <PropertyGroup>
+      <ArtifactName>$(AssemblyName)</ArtifactName>
+      <ArtifactName Condition="'$(PluginVersion)' != ''">$(ArtifactName)-$(PluginVersion)</ArtifactName>
+      <ArtifactName Condition="'$(GameVersion)' != ''">$(ArtifactName)-bs$(GameVersion)</ArtifactName>
+      <ArtifactName Condition="'$(CommitHash)' != '' AND '$(CommitHash)' != 'local'">$(ArtifactName)-$(CommitHash)</ArtifactName>
+    </PropertyGroup>
   </Target>
-  <!--Build Tasks-->
-  <UsingTask TaskName="GetManifestInfo" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll">
-    <ParameterGroup>
-      <GameVersion ParameterType="System.String" Output="true" />
-      <PluginVersion ParameterType="System.String" Output="true" />
-      <AssemblyVersion ParameterType="System.String" Output="true" />
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.Runtime" />
-      <Reference Include="System.Dynamic.Runtime" />
-      <Reference Include="System.ObjectModel" />
-      <Using Namespace="System.IO" />
-      <Using Namespace="System.Text.RegularExpressions" />
-      <Code Type="Fragment" Language="cs"><![CDATA[
-            try
-            {
-                string manifestFile = "manifest.json";
-                string assemblyFile = "Properties\\AssemblyInfo.cs";
-                string manifest_gameVerStart = "\"gameVersion\"";
-                string manifest_versionStart = "\"version\"";
-                string manifest_gameVerLine = null;
-                string manifest_versionLine = null;
-                string startString = "[assembly: AssemblyVersion(\"";
-                string secondStartString = "[assembly: AssemblyFileVersion(\"";
-                string assemblyFileVersion = null;
-                string firstLineStr = null;
-                string endLineStr = null;
-                bool badParse = false;
-                int startLine = 1;
-                int endLine = 0;
-                int startColumn = 0;
-                int endColumn = 0;
-                if (!File.Exists(manifestFile))
-                {
-                    throw new FileNotFoundException("Could not find manifest: " + Path.GetFullPath(manifestFile));
-                }
-                if (!File.Exists(assemblyFile))
-                {
-                    throw new FileNotFoundException("Could not find AssemblyInfo: " + Path.GetFullPath(assemblyFile));
-                }
-                string line;
-                using (StreamReader manifestStream = new StreamReader(manifestFile))
-                {
-                    while ((line = manifestStream.ReadLine()) != null && (manifest_versionLine == null || manifest_gameVerLine == null))
-                    {
-                        line = line.Trim();
-                        if (line.StartsWith(manifest_gameVerStart))
-                        {
-                            manifest_gameVerLine = line;
-                        }
-                        else if (line.StartsWith(manifest_versionStart))
-                        {
-                            manifest_versionLine = line;
-                        }
-                    }
-                }
-                if (!string.IsNullOrEmpty(manifest_versionLine))
-                {
-                    PluginVersion = manifest_versionLine.Substring(manifest_versionStart.Length).Replace(":", "").Replace("\"", "").TrimEnd(',').Trim();
-                }
-                else
-                {
-                    Log.LogError("Build", "BSMOD04", "", manifestFile, 0, 0, 0, 0, "PluginVersion not found in manifest.json");
-                    PluginVersion = "E.R.R";
-                }
-
-                if (!string.IsNullOrEmpty(manifest_gameVerLine))
-                {
-                    GameVersion = manifest_gameVerLine.Substring(manifest_gameVerStart.Length).Replace(":", "").Replace("\"", "").TrimEnd(',').Trim();
-                }
-                else
-                {
-                    Log.LogError("Build", "BSMOD05", "", manifestFile, 0, 0, 0, 0, "GameVersion not found in manifest.json");
-                    GameVersion = "E.R.R";
-                }
-
-                line = null;
-                using (StreamReader assemblyStream = new StreamReader(assemblyFile))
-                {
-                    while ((line = assemblyStream.ReadLine()) != null)
-                    {
-                        if (line.Trim().StartsWith(startString))
-                        {
-                            firstLineStr = line;
-                            break;
-                        }
-                        startLine++;
-                        endLine = startLine + 1;
-                    }
-                    while ((line = assemblyStream.ReadLine()) != null)
-                    {
-                        if (line.Trim().StartsWith(secondStartString))
-                        {
-                            endLineStr = line;
-                            break;
-                        }
-                        endLine++;
-                    }
-                }
-                if (!string.IsNullOrEmpty(firstLineStr))
-                {
-                    startColumn = firstLineStr.IndexOf('"') + 1;
-                    endColumn = firstLineStr.LastIndexOf('"');
-                    if (startColumn > 0 && endColumn > 0)
-                        AssemblyVersion = firstLineStr.Substring(startColumn, endColumn - startColumn);
-                    else
-                        badParse = true;
-                }
-                else
-                    badParse = true;
-                if (badParse)
-                {
-                    Log.LogError("Build", "BSMOD03", "", assemblyFile, 0, 0, 0, 0, "Unable to parse the AssemblyVersion from {0}", assemblyFile);
-                    badParse = false;
-                }
-
-                if (PluginVersion != "E.R.R" && AssemblyVersion != PluginVersion)
-                {
-                    Log.LogError("Build", "BSMOD01", "", assemblyFile, startLine, startColumn + 1, startLine, endColumn + 1, "PluginVersion {0} in manifest.json does not match AssemblyVersion {1} in AssemblyInfo.cs", PluginVersion, AssemblyVersion, assemblyFile);
-                    Log.LogMessage(MessageImportance.High, "PluginVersion {0} does not match AssemblyVersion {1}", PluginVersion, AssemblyVersion);
-                }
-                if (!string.IsNullOrEmpty(endLineStr))
-                {
-                    startColumn = endLineStr.IndexOf('"') + 1;
-                    endColumn = endLineStr.LastIndexOf('"');
-                    if (startColumn > 0 && endColumn > 0)
-                    {
-                        assemblyFileVersion = endLineStr.Substring(startColumn, endColumn - startColumn);
-                        if (AssemblyVersion != assemblyFileVersion)
-                            Log.LogWarning("Build", "BSMOD02", "", assemblyFile, endLine, startColumn + 1, endLine, endColumn + 1, "AssemblyVersion {0} does not match AssemblyFileVersion {1} in AssemblyInfo.cs", AssemblyVersion, assemblyFileVersion);
-
-                    }
-                    else
-                    {
-                        Log.LogWarning("Build", "BSMOD06", "", assemblyFile, 0, 0, 0, 0, "Unable to parse the AssemblyFileVersion from {0}", assemblyFile);
-                    }
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                throw;
-                Log.LogErrorFromException(ex);
-                return false;
-            }
-      ]]></Code>
-    </Task>
-  </UsingTask>
-  <!-- Source: https://stackoverflow.com/a/38127938 -->
-  <UsingTask TaskName="ZipDir" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll">
-    <ParameterGroup>
-      <ZipFileName ParameterType="System.String" Required="true" />
-      <DirectoryName ParameterType="System.String" Required="true" />
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.IO.Compression.FileSystem" />
-      <Reference Include="System.IO" />
-      <Using Namespace="System.IO.Compression" />
-      <Using Namespace="System.IO" />
-      <Using Namespace="System.Threading" />
-      <Code Type="Fragment" Language="cs"><![CDATA[
-        try
-        {
-          var zipDir = new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(ZipFileName)));
-          if (zipDir.Exists)
-            zipDir.Delete(true);
-          zipDir.Create();
-          zipDir.Refresh();
-          int tries = 0;
-          while(!zipDir.Exists || tries < 10) // Prevents breaking when Explorer is in the folder.
-          {
-            tries++;
-            Thread.Sleep(50);
-            zipDir.Create();
-            zipDir.Refresh();
-          }
-          if(File.Exists(ZipFileName))
-            File.Delete(ZipFileName);
-          Log.LogMessage(MessageImportance.High, "Zipping Directory \"{0}\" to \"{1}\"", DirectoryName, ZipFileName);
-          ZipFile.CreateFromDirectory( DirectoryName, ZipFileName );
-          return true;
-        }
-        catch(Exception ex)
-        {
-          Log.LogErrorFromException(ex);
-          return false;
-        }
-      ]]></Code>
-    </Task>
-  </UsingTask>
-  <UsingTask TaskName="GetCommitHash" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll">
-    <ParameterGroup>
-      <ProjectDir ParameterType="System.String" Required="true" />
-      <CommitShortHash ParameterType="System.String" Output="true" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="System.Diagnostics" />
-      <Code Type="Fragment" Language="cs"><![CDATA[
-            CommitShortHash = "local";
-            try
-            {
-                ProjectDir = Path.GetFullPath(ProjectDir);
-                Process process = new Process();
-                string arg = "rev-parse HEAD";
-                process.StartInfo = new ProcessStartInfo("git", arg);
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.WorkingDirectory = ProjectDir;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.Start();
-                var outText = process.StandardOutput.ReadToEnd();
-                if(outText.Length >= 7)
-                  CommitShortHash = outText.Substring(0, 7);
-                else
-                  Log.LogMessage(MessageImportance.High, "Unable to retrieve current commit hash.");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log.LogErrorFromException(ex);
-                return true;
-            }
-      ]]></Code>
-    </Task>
-  </UsingTask>
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
+  <Target Name="ZipRelease" AfterTargets="Build" Condition="'$(DisableZipRelease)' != 'True' AND '$(Configuration)' == 'Release' AND '$(BSMTTaskAssembly)' != ''">
+    <PropertyGroup>
+      <DestinationDirectory>$(OutDir)zip\</DestinationDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <OldZips Include="$(DestinationDirectory)$(AssemblyName)*.zip" />
+    </ItemGroup>
+    <Copy SourceFiles="$(OutputAssemblyName).dll" DestinationFiles="$(ArtifactDestination)\Plugins\$(AssemblyName).dll" />
+    <Message Text="PluginVersion: $(PluginVersion), AssemblyVersion: $(AssemblyVersion), GameVersion: $(GameVersion)" Importance="high" />
+    <Delete Files="@(OldZips)" TreatErrorsAsWarnings="true" ContinueOnError="true" />
+    <ZipDir SourceDirectory="$(ArtifactDestination)" DestinationFile="$(DestinationDirectory)$(ArtifactName).zip" />
+  </Target>
 </Project>
