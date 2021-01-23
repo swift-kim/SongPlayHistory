@@ -1,16 +1,14 @@
 ﻿{
   "author": "peperoro",
-  "description": [
-    "A score tracker with simple in-game UI."
-  ],
-  "gameVersion": "1.13.0",
+  "description": "A score tracker with simple in-game UI.",
+  "gameVersion": "1.13.2",
   "id": "SongPlayHistory",
   "name": "SongPlayHistory",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "dependsOn": {
-    "BSIPA": "^4.1.3",
-    "BeatSaberMarkupLanguage": "^1.4.1",
-    "BS Utils": "^1.6.3"
+    "BSIPA": "^4.1.4",
+    "BeatSaberMarkupLanguage": "^1.4.5",
+    "BS Utils": "^1.7.0"
   },
   "links": {
     "project-home": "https://github.com/swift-kim/SongPlayHistory"

@@ -89,7 +89,7 @@ namespace SongPlayHistory
             {
                 Param param = Param.None;
                 param |= mods.energyType == GameplayModifiers.EnergyType.Battery ? Param.BatteryEnergy : 0;
-                param |= mods.noFail ? Param.NoFail : 0;
+                param |= mods.noFailOn0Energy ? Param.NoFail : 0;
                 param |= mods.instaFail ? Param.InstaFail : 0;
                 param |= mods.enabledObstacleType == GameplayModifiers.EnabledObstacleType.NoObstacles ? Param.NoObstacles : 0;
                 param |= mods.noBombs ? Param.NoBombs : 0;
