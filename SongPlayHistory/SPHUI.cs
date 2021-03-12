@@ -48,7 +48,7 @@ namespace SongPlayHistory
                         var physicsRaycaster = mainMenu.GetComponent<VRGraphicRaycaster>()
                             .GetField<PhysicsRaycasterWithCache, VRGraphicRaycaster>("_physicsRaycaster");
                         vc.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", physicsRaycaster);
-                        vc.GetComponent<CurvedCanvasSettings>().SetRadius(140f); // Some value between 125 (SongBrowser) and 154.
+                        vc.GetComponent<CurvedCanvasSettings>().SetRadius(154f);
                         vc.transform.SetParent(BeatSaberUI.LevelCollectionTableView.transform, false);
                         vc.transform.AlignBottom(8f, -14f); // Room for SongBrowser.
                         vc.gameObject.SetActive(true);
@@ -148,20 +148,23 @@ namespace SongPlayHistory
                     }
 
                     var mods = new List<string>();
-                    if (param.HasFlag(Param.SubmissionDisabled)) mods.Add("??");
                     if (param.HasFlag(Param.Multiplayer)) mods.Add("MULTI");
-                    if (param.HasFlag(Param.DisappearingArrows)) mods.Add("DA");
-                    if (param.HasFlag(Param.GhostNotes)) mods.Add("GN");
-                    if (param.HasFlag(Param.FasterSong)) mods.Add("FS");
+                    if (param.HasFlag(Param.BatteryEnergy)) mods.Add("BE");
                     if (param.HasFlag(Param.NoFail)) mods.Add("NF");
+                    if (param.HasFlag(Param.InstaFail)) mods.Add("IF");
                     if (param.HasFlag(Param.NoObstacles)) mods.Add("NO");
                     if (param.HasFlag(Param.NoBombs)) mods.Add("NB");
-                    if (param.HasFlag(Param.SlowerSong)) mods.Add("SS");
-                    if (param.HasFlag(Param.NoArrows)) mods.Add("NA");
-                    if (param.HasFlag(Param.InstaFail)) mods.Add("IF");
-                    if (param.HasFlag(Param.BatteryEnergy)) mods.Add("BE");
                     if (param.HasFlag(Param.FastNotes)) mods.Add("FN");
                     if (param.HasFlag(Param.StrictAngles)) mods.Add("SA");
+                    if (param.HasFlag(Param.DisappearingArrows)) mods.Add("DA");
+                    if (param.HasFlag(Param.SuperFastSong)) mods.Add("SFS");
+                    if (param.HasFlag(Param.FasterSong)) mods.Add("FS");
+                    if (param.HasFlag(Param.SlowerSong)) mods.Add("SS");
+                    if (param.HasFlag(Param.NoArrows)) mods.Add("NA");
+                    if (param.HasFlag(Param.GhostNotes)) mods.Add("GN");
+                    if (param.HasFlag(Param.SmallCubes)) mods.Add("SN");
+                    if (param.HasFlag(Param.ProMode)) mods.Add("PRO");
+                    if (param.HasFlag(Param.SubmissionDisabled)) mods.Add("??");
                     if (mods.Count > 4)
                     {
                         mods = mods.Take(3).ToList(); // Truncate

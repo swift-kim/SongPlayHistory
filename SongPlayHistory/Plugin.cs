@@ -77,7 +77,7 @@ namespace SongPlayHistory
             SaveRecord(scene?.difficultyBeatmap, result, false);
         }
 
-        private void OnMultilevelFinished(MultiplayerLevelScenesTransitionSetupDataSO scene, LevelCompletionResults result, Dictionary<string, LevelCompletionResults> __)
+        private void OnMultilevelFinished(MultiplayerLevelScenesTransitionSetupDataSO scene, LevelCompletionResults result, IReadOnlyList<MultiplayerPlayerResultsData> _)
         {
             SaveRecord(scene?.difficultyBeatmap, result, true);
         }

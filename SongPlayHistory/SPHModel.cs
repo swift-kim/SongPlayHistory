@@ -32,6 +32,9 @@ namespace SongPlayHistory
         SlowerSong = 0x0200,
         NoArrows = 0x0400,
         GhostNotes = 0x0800,
+        SuperFastSong = 0x1000,
+        SmallCubes = 0x2000,
+        ProMode = 0x4000,
         SubmissionDisabled = 0x10000,
         Multiplayer = 0x20000,
     }
@@ -96,10 +99,13 @@ namespace SongPlayHistory
                 param |= mods.fastNotes ? Param.FastNotes : 0;
                 param |= mods.strictAngles ? Param.StrictAngles : 0;
                 param |= mods.disappearingArrows ? Param.DisappearingArrows : 0;
+                param |= mods.songSpeed == GameplayModifiers.SongSpeed.SuperFast ? Param.SuperFastSong : 0;
                 param |= mods.songSpeed == GameplayModifiers.SongSpeed.Faster ? Param.FasterSong : 0;
                 param |= mods.songSpeed == GameplayModifiers.SongSpeed.Slower ? Param.SlowerSong : 0;
                 param |= mods.noArrows ? Param.NoArrows : 0;
                 param |= mods.ghostNotes ? Param.GhostNotes : 0;
+                param |= mods.smallCubes ? Param.SmallCubes : 0;
+                param |= mods.proMode ? Param.ProMode : 0;
                 return param;
             }
 
